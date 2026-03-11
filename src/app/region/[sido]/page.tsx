@@ -2,32 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SIDO_LIST, POLICIES } from '@/lib/constants'
+import { getBenefitsBySido } from '@/lib/supabase'
 import Breadcrumb from '@/components/Breadcrumb'
 import AdBanner from '@/components/AdBanner'
 
 interface PageProps {
   params: Promise<{ sido: string }>
-}
-
-// 시도별 더미 시/군/구 목록 — Phase 4에서 Supabase로 교체
-const DUMMY_CITIES_BY_SIDO: Record<string, string[]> = {
-  '서울특별시':   ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '노원구', '도봉구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구'],
-  '경기도':       ['고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안양시', '양주시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '하남시', '화성시'],
-  '부산광역시':   ['강서구', '금정구', '기장군', '남구', '동구', '동래구', '부산진구', '북구', '사상구', '사하구', '수영구', '연제구', '영도구', '해운대구'],
-  '대구광역시':   ['달서구', '달성군', '동구', '북구', '서구', '수성구', '중구', '남구'],
-  '인천광역시':   ['계양구', '남동구', '동구', '미추홀구', '부평구', '서구', '연수구', '중구'],
-  '광주광역시':   ['광산구', '남구', '동구', '북구', '서구'],
-  '대전광역시':   ['대덕구', '동구', '서구', '유성구', '중구'],
-  '울산광역시':   ['남구', '동구', '북구', '울주군', '중구'],
-  '세종특별자치시': ['세종시'],
-  '강원특별자치도': ['강릉시', '동해시', '삼척시', '속초시', '원주시', '춘천시', '태백시', '횡성군'],
-  '충청북도':     ['괴산군', '단양군', '보은군', '영동군', '옥천군', '음성군', '제천시', '청주시', '충주시'],
-  '충청남도':     ['공주시', '당진시', '논산시', '보령시', '서산시', '아산시', '천안시', '홍성군'],
-  '전북특별자치도': ['고창군', '군산시', '김제시', '남원시', '완주군', '익산시', '전주시', '정읍시'],
-  '전라남도':     ['광양시', '나주시', '목포시', '순천시', '여수시', '해남군'],
-  '경상북도':     ['경산시', '경주시', '구미시', '김천시', '안동시', '영주시', '포항시'],
-  '경상남도':     ['거제시', '김해시', '밀양시', '사천시', '양산시', '진주시', '창원시', '통영시'],
-  '제주특별자치도': ['서귀포시', '제주시'],
 }
 
 export async function generateStaticParams() {
@@ -49,7 +29,15 @@ export default async function RegionPage({ params }: PageProps) {
 
   if (!SIDO_LIST.includes(sidoDecoded)) notFound()
 
-  const cities = DUMMY_CITIES_BY_SIDO[sidoDecoded] ?? ['해당 지역 데이터 준비 중']
+  const benefits = await getBenefitsBySido(sidoDecoded)
+
+  // city_name 기준으로 그룹화 (중복 제거)
+  const cityMap = new Map<string, string[]>()
+  for (const b of benefits) {
+    if (!cityMap.has(b.city_name)) cityMap.set(b.city_name, [])
+    cityMap.get(b.city_name)!.push(b.policy_id)
+  }
+  const cities = [...cityMap.keys()].sort()
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -92,33 +80,49 @@ export default async function RegionPage({ params }: PageProps) {
           <span className="ml-2 text-sm font-normal text-gray-400">({cities.length}개)</span>
         </h2>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {cities.map((city) => (
-            <div
-              key={city}
-              className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
-            >
-              {/* 도시명 + 전체 보기 */}
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-bold text-gray-900">{city}</h3>
-                <span className="text-xs text-gray-400">{sidoDecoded}</span>
-              </div>
-
-              {/* 8개 정책 링크 */}
-              <div className="flex flex-wrap gap-1.5">
-                {POLICIES.map((policy) => (
-                  <Link
-                    key={policy.id}
-                    href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(city)}/${policy.id}`}
-                    className="inline-flex items-center gap-0.5 rounded-full border border-gray-100 bg-gray-50 px-2.5 py-1 text-xs text-gray-600 transition-colors hover:border-[#1f1bc4] hover:bg-blue-50 hover:text-[#1f1bc4]"
-                  >
-                    {policy.icon} {policy.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        {cities.length === 0 ? (
+          <p className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500">
+            콘텐츠가 준비 중입니다. 곧 업데이트될 예정입니다.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {cities.map((city) => {
+              const availablePolicies = cityMap.get(city) ?? []
+              return (
+                <div
+                  key={city}
+                  className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="font-bold text-gray-900">{city}</h3>
+                    <span className="text-xs text-gray-400">{sidoDecoded}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {POLICIES.map((policy) => {
+                      const hasData = availablePolicies.includes(policy.id)
+                      return hasData ? (
+                        <Link
+                          key={policy.id}
+                          href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(city)}/${policy.id}`}
+                          className="inline-flex items-center gap-0.5 rounded-full border border-gray-100 bg-gray-50 px-2.5 py-1 text-xs text-gray-600 transition-colors hover:border-[#1f1bc4] hover:bg-blue-50 hover:text-[#1f1bc4]"
+                        >
+                          {policy.icon} {policy.name}
+                        </Link>
+                      ) : (
+                        <span
+                          key={policy.id}
+                          className="inline-flex items-center gap-0.5 rounded-full border border-gray-100 bg-gray-50 px-2.5 py-1 text-xs text-gray-400"
+                        >
+                          {policy.icon} {policy.name}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </section>
 
       {/* 다른 지역 바로가기 */}

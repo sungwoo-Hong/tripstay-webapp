@@ -5,53 +5,73 @@ import NationalBenefitsTable from '@/components/NationalBenefitsTable'
 import InternalLinkButtons from '@/components/InternalLinkButtons'
 import AdBanner from '@/components/AdBanner'
 import Breadcrumb from '@/components/Breadcrumb'
-import { POLICIES, DUMMY_NATIONAL_BENEFITS, SITE_URL } from '@/lib/constants'
-import { getDummyContent } from '@/lib/dummy-content'
+import { POLICIES, SITE_URL } from '@/lib/constants'
+import { getAllBenefitParams, getBenefit, getNationalBenefits } from '@/lib/supabase'
 
 interface PageProps {
   params: Promise<{ sido: string; city: string; policy: string }>
 }
 
-// Phase 3: 더미 경로. Phase 4에서 Supabase 전체 2,000개로 교체
+// ── 빌드 시 Supabase에서 전체 경로 생성 ─────────────────────
+// benefits 테이블이 비어있으면 [] 반환 → 빌드 성공, 정적 페이지 0개
 export async function generateStaticParams() {
-  return [
-    { sido: encodeURIComponent('경기도'), city: encodeURIComponent('고양시'), policy: 'birth-support' },
-    { sido: encodeURIComponent('경기도'), city: encodeURIComponent('수원시'), policy: 'birth-support' },
-    { sido: encodeURIComponent('서울특별시'), city: encodeURIComponent('강남구'), policy: 'birth-support' },
-    { sido: encodeURIComponent('경기도'), city: encodeURIComponent('고양시'), policy: 'first-voucher' },
-    { sido: encodeURIComponent('서울특별시'), city: encodeURIComponent('강남구'), policy: 'parental-benefit' },
-  ]
+  const params = await getAllBenefitParams()
+
+  return params.map((item) => ({
+    sido:   encodeURIComponent(item.sido),
+    city:   encodeURIComponent(item.city_name),
+    policy: item.policy_id,
+  }))
 }
 
+// ── SEO 메타데이터 ────────────────────────────────────────
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { sido, city, policy } = await params
   const sidoDecoded = decodeURIComponent(sido)
   const cityDecoded = decodeURIComponent(city)
-  const policyObj   = POLICIES.find((p) => p.id === policy)
-  if (!policyObj) return {}
 
-  const title       = `${cityDecoded} ${policyObj.name} 신청방법 및 지원금액 총정리`
-  const description = `${sidoDecoded} ${cityDecoded}의 ${policyObj.name} 지원대상·신청방법·지원금액을 한눈에 확인하세요. 전국 공통 혜택부터 지역 추가 지원금까지 모두 정리했습니다.`
-  const url         = `${SITE_URL}/${sido}/${city}/${policy}`
+  const benefit = await getBenefit(sidoDecoded, cityDecoded, policy)
+
+  // Supabase에 데이터 없으면 기본 메타데이터
+  if (!benefit) {
+    const policyObj = POLICIES.find((p) => p.id === policy)
+    const title     = `${cityDecoded} ${policyObj?.name ?? policy} 신청방법 및 지원금액`
+    return { title }
+  }
+
+  const url = `${SITE_URL}/${sido}/${city}/${policy}`
 
   return {
-    title,
-    description,
-    keywords: [cityDecoded, policyObj.name, sidoDecoded, '복지정책', '신청방법', '지원금액'],
-    openGraph: { title, description, url, type: 'article' },
+    title:       benefit.title,
+    description: benefit.meta_description ?? undefined,
+    keywords:    [...(benefit.tags ?? []), sidoDecoded, cityDecoded],
+    openGraph: {
+      title:       benefit.title,
+      description: benefit.meta_description ?? undefined,
+      url,
+      type: 'article',
+    },
     alternates: { canonical: url },
   }
 }
 
 /** JSON-LD 구조화 데이터 */
-function JsonLd({ title, description, url }: { title: string; description: string; url: string }) {
+function JsonLd({
+  title,
+  description,
+  url,
+}: {
+  title: string
+  description: string
+  url: string
+}) {
   const data = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: title,
+    '@context':  'https://schema.org',
+    '@type':     'Article',
+    headline:    title,
     description,
     url,
-    author: { '@type': 'Organization', name: '복지다모아' },
+    author:    { '@type': 'Organization', name: '복지다모아' },
     publisher: { '@type': 'Organization', name: '복지다모아' },
     dateModified: new Date().toISOString().split('T')[0],
   }
@@ -63,40 +83,41 @@ function JsonLd({ title, description, url }: { title: string; description: strin
   )
 }
 
+// ── 페이지 본문 ───────────────────────────────────────────
 export default async function BenefitDetailPage({ params }: PageProps) {
   const { sido, city, policy } = await params
-  const sidoDecoded  = decodeURIComponent(sido)
-  const cityDecoded  = decodeURIComponent(city)
-  const policyObj    = POLICIES.find((p) => p.id === policy)
+  const sidoDecoded = decodeURIComponent(sido)
+  const cityDecoded = decodeURIComponent(city)
 
-  if (!policyObj) notFound()
+  // Supabase에서 해당 지역×정책 콘텐츠 조회
+  const benefit          = await getBenefit(sidoDecoded, cityDecoded, policy)
+  const nationalBenefits = await getNationalBenefits(policy)
 
-  // Phase 3: 더미 콘텐츠. Phase 4에서 Supabase getBenefit()으로 교체
-  const htmlContent      = getDummyContent(sidoDecoded, cityDecoded, policy, policyObj.name)
-  const nationalBenefits = DUMMY_NATIONAL_BENEFITS.filter((b) => b.policy_id === policy)
-  const pageTitle        = `${cityDecoded} ${policyObj.name} 신청방법 및 지원금액 총정리`
-  const pageUrl          = `${SITE_URL}/${sido}/${city}/${policy}`
+  // 데이터 없으면 404
+  if (!benefit) notFound()
+
+  const policyObj = POLICIES.find((p) => p.id === policy)
+  const pageUrl   = `${SITE_URL}/${sido}/${city}/${policy}`
 
   const internalLinks = [
     {
-      label: `${sidoDecoded} 전체 ${policyObj.name} 보기`,
+      label: `${sidoDecoded} 전체 ${benefit.policy_name} 보기`,
       href:  `/region/${sido}`,
     },
     {
-      label: `전국 ${policyObj.name} 모아보기`,
+      label: `전국 ${benefit.policy_name} 모아보기`,
       href:  `/policy/${policy}`,
     },
     { label: '복지정책 전체보기', href: '/' },
   ]
 
-  // 다른 정책 바로가기 (현재 정책 제외)
   const relatedPolicies = POLICIES.filter((p) => p.id !== policy)
 
   return (
     <>
       <JsonLd
-        title={pageTitle}
-        description={`${sidoDecoded} ${cityDecoded}의 ${policyObj.name} 지원 정보`}
+        title={benefit.title}
+        description={benefit.meta_description ?? benefit.title}
         url={pageUrl}
       />
 
@@ -107,31 +128,50 @@ export default async function BenefitDetailPage({ params }: PageProps) {
             { label: '홈', href: '/' },
             { label: sidoDecoded, href: `/region/${sido}` },
             { label: cityDecoded, href: `/region/${sido}` },
-            { label: policyObj.name },
+            { label: benefit.policy_name },
           ]}
         />
 
         {/* 제목 + 메타 */}
         <h1 className="mb-3 text-2xl font-bold leading-snug text-gray-900 sm:text-3xl">
-          {pageTitle}
+          {benefit.title}
         </h1>
         <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500">
           <span>{sidoDecoded}</span>
           <span>·</span>
           <span>{cityDecoded}</span>
           <span>·</span>
-          <span>{policyObj.name}</span>
+          <span>{benefit.policy_name}</span>
           <span>·</span>
-          <span>2026년 기준</span>
+          <time dateTime={benefit.created_at}>
+            {new Date(benefit.created_at).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+            })} 기준
+          </time>
         </div>
+
+        {/* 태그 */}
+        {benefit.tags && benefit.tags.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-1.5">
+            {benefit.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs text-[#1f1bc4]"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* 전국 공통 혜택 표 */}
         <NationalBenefitsTable benefits={nationalBenefits} />
 
-        {/* 광고 배너 (전국 공통 혜택 표 바로 아래) */}
+        {/* 광고 배너 */}
         <AdBanner className="my-6" />
 
-        {/* 본문 콘텐츠 */}
+        {/* 본문 콘텐츠 (Gemini 생성 HTML) */}
         <div
           className="prose prose-gray max-w-none
             prose-headings:font-bold prose-headings:text-gray-900
@@ -141,7 +181,7 @@ export default async function BenefitDetailPage({ params }: PageProps) {
             prose-li:text-gray-700
             prose-table:text-sm prose-th:bg-blue-50 prose-th:text-gray-700
             prose-a:text-[#1f1bc4] prose-a:no-underline hover:prose-a:underline"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
+          dangerouslySetInnerHTML={{ __html: benefit.content }}
         />
 
         {/* 내부 링크 버튼 */}
@@ -152,9 +192,9 @@ export default async function BenefitDetailPage({ params }: PageProps) {
           <h2 className="mb-4 text-sm font-bold text-gray-700">공식 사이트에서 신청하기</h2>
           <div className="flex flex-wrap gap-3">
             {[
-              { label: '복지로 신청하기', href: 'https://www.bokjiro.go.kr' },
-              { label: '정부24 원스톱 신청', href: 'https://www.gov.kr' },
-              { label: '아이사랑 보육포털', href: 'https://www.childcare.go.kr' },
+              { label: '복지로 신청하기',      href: 'https://www.bokjiro.go.kr' },
+              { label: '정부24 원스톱 신청',   href: 'https://www.gov.kr' },
+              { label: '아이사랑 보육포털',    href: 'https://www.childcare.go.kr' },
             ].map((link) => (
               <a
                 key={link.href}
@@ -186,6 +226,17 @@ export default async function BenefitDetailPage({ params }: PageProps) {
             ))}
           </div>
         </div>
+
+        {/* 이전·다음 네비게이션 자리 (Phase 4+ 확장 가능) */}
+        {policyObj && (
+          <div className="mt-8 border-t pt-6 text-xs text-gray-400">
+            이 페이지는{' '}
+            <Link href={`/policy/${policy}`} className="text-[#1f1bc4] hover:underline">
+              전국 {policyObj.name} 목록
+            </Link>
+            의 일부입니다.
+          </div>
+        )}
       </article>
     </>
   )

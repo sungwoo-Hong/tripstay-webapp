@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { POLICIES, SIDO_LIST, SITE_NAME } from '@/lib/constants'
-import { RECENT_CITIES } from '@/lib/dummy-content'
+import { getRecentBenefits } from '@/lib/supabase'
 import SearchBox from '@/components/SearchBox'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const recentBenefits = await getRecentBenefits(12)
+
   return (
     <div>
       {/* ── 히어로 섹션 ─────────────────────────────── */}
@@ -44,32 +46,34 @@ export default function HomePage() {
         </section>
 
         {/* ── 최근 등록 지역 ───────────────────────────── */}
-        <section className="mb-14">
-          <h2 className="mb-2 text-xl font-bold text-gray-900">최근 등록 지역</h2>
-          <p className="mb-6 text-sm text-gray-500">새로 추가된 지역 복지정보입니다</p>
-          <div className="divide-y rounded-2xl border border-gray-200 bg-white shadow-sm">
-            {RECENT_CITIES.map((item) => (
-              <Link
-                key={`${item.sido}-${item.city_name}-${item.policy_id}`}
-                href={`/${encodeURIComponent(item.sido)}/${encodeURIComponent(item.city_name)}/${item.policy_id}`}
-                className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-blue-50"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-lg">
-                    {POLICIES.find((p) => p.id === item.policy_id)?.icon ?? '📋'}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {item.city_name} {item.policy_name}
-                    </p>
-                    <p className="text-xs text-gray-500">{item.sido}</p>
+        {recentBenefits.length > 0 && (
+          <section className="mb-14">
+            <h2 className="mb-2 text-xl font-bold text-gray-900">최근 등록 지역</h2>
+            <p className="mb-6 text-sm text-gray-500">새로 추가된 지역 복지정보입니다</p>
+            <div className="divide-y rounded-2xl border border-gray-200 bg-white shadow-sm">
+              {recentBenefits.map((item) => (
+                <Link
+                  key={`${item.sido}-${item.city_name}-${item.policy_id}`}
+                  href={`/${encodeURIComponent(item.sido)}/${encodeURIComponent(item.city_name)}/${item.policy_id}`}
+                  className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-blue-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-lg">
+                      {POLICIES.find((p) => p.id === item.policy_id)?.icon ?? '📋'}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {item.city_name} {item.policy_name}
+                      </p>
+                      <p className="text-xs text-gray-500">{item.sido}</p>
+                    </div>
                   </div>
-                </div>
-                <span className="text-xs text-[#1f1bc4]">보기 →</span>
-              </Link>
-            ))}
-          </div>
-        </section>
+                  <span className="text-xs text-[#1f1bc4]">보기 →</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── 광역시도별 바로가기 ──────────────────────── */}
         <section>

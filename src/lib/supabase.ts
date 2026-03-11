@@ -1,67 +1,88 @@
 import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Benefit, NationalBenefit } from '@/types'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-// 브라우저/서버 공용 클라이언트 (공개 읽기 전용)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// 서버 전용 클라이언트 (Service Role Key — 서버 컴포넌트에서만 사용)
-export function createServerClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  })
+// ── 클라이언트 컴포넌트용 (브라우저) ─────────────────────────
+export function createBrowserSupabaseClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
 }
 
-// ── 데이터 페칭 헬퍼 ──────────────────────────────────────
+// ── 서버 컴포넌트용 (SSG/SSR) ─────────────────────────────
+// 공개 읽기 전용: benefits, national_benefits 모두 RLS SELECT public
+export const supabaseServer = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: false } },
+)
+
+// ── 서버 전용 쓰기 클라이언트 (pipeline 업로드 등 관리 목적) ──
+// SUPABASE_SERVICE_ROLE_KEY는 서버 컴포넌트에서만 사용, 클라이언트 노출 금지
+export function createAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  )
+}
+
+// ── 데이터 페칭 헬퍼 (서버 컴포넌트용) ──────────────────────
 
 export async function getBenefit(
   sido: string,
   cityName: string,
-  policyId: string
+  policyId: string,
 ): Promise<Benefit | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServer
     .from('benefits')
     .select('*')
-    .eq('sido', decodeURIComponent(sido))
-    .eq('city_name', decodeURIComponent(cityName))
-    .eq('policy_id', decodeURIComponent(policyId))
+    .eq('sido', sido)
+    .eq('city_name', cityName)
+    .eq('policy_id', policyId)
     .single()
 
   if (error) return null
   return data
 }
 
-export async function getBenefitsByPolicy(policyId: string, page = 1, pageSize = 50) {
+export async function getBenefitsByPolicy(
+  policyId: string,
+  page = 1,
+  pageSize = 50,
+): Promise<{ data: Benefit[]; count: number }> {
   const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const to   = from + pageSize - 1
 
-  const { data, error, count } = await supabase
+  const { data, error, count } = await supabaseServer
     .from('benefits')
-    .select('*', { count: 'exact' })
+    .select('sido, city_name, policy_id, policy_name, title, slug', { count: 'exact' })
     .eq('policy_id', policyId)
-    .order('sido', { ascending: true })
+    .order('sido',      { ascending: true })
+    .order('city_name', { ascending: true })
     .range(from, to)
 
   if (error) return { data: [], count: 0 }
-  return { data: data ?? [], count: count ?? 0 }
+  return { data: (data ?? []) as Benefit[], count: count ?? 0 }
 }
 
-export async function getBenefitsBySido(sido: string) {
-  const { data, error } = await supabase
+export async function getBenefitsBySido(sido: string): Promise<Benefit[]> {
+  const { data, error } = await supabaseServer
     .from('benefits')
-    .select('*')
-    .eq('sido', decodeURIComponent(sido))
+    .select('city_name, policy_id, policy_name, title, slug')
+    .eq('sido', sido)
     .order('city_name', { ascending: true })
+    .order('policy_id',  { ascending: true })
 
   if (error) return []
-  return data ?? []
+  return (data ?? []) as Benefit[]
 }
 
-export async function getAllBenefitParams() {
-  const { data, error } = await supabase
+export async function getAllBenefitParams(): Promise<
+  Array<{ sido: string; city_name: string; policy_id: string }>
+> {
+  const { data, error } = await supabaseServer
     .from('benefits')
     .select('sido, city_name, policy_id')
 
@@ -70,11 +91,23 @@ export async function getAllBenefitParams() {
 }
 
 export async function getNationalBenefits(policyId: string): Promise<NationalBenefit[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServer
     .from('national_benefits')
-    .select('*')
+    .select('id, policy_id, name, amount, description, apply_url')
     .eq('policy_id', policyId)
+    .order('sort_order', { ascending: true })
 
   if (error) return []
-  return data ?? []
+  return (data ?? []) as NationalBenefit[]
+}
+
+export async function getRecentBenefits(limit = 12): Promise<Benefit[]> {
+  const { data, error } = await supabaseServer
+    .from('benefits')
+    .select('sido, city_name, policy_id, policy_name, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) return []
+  return (data ?? []) as Benefit[]
 }
