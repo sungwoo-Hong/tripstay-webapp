@@ -171,43 +171,72 @@ export default async function BenefitDetailPage({ params }: PageProps) {
         {/* 광고 배너 */}
         <AdBanner className="my-6" />
 
-        {/* 본문 콘텐츠 (Gemini 생성 HTML) */}
-        <div
-          className="prose prose-gray max-w-none
+        {/* 본문 콘텐츠 - h2[신청 방법 및 자격] 기준으로 분리 */}
+        {(() => {
+          const html = benefit.content
+          const splitKeyword = '신청 방법 및 자격'
+          const h2Regex = new RegExp(`(<h2[^>]*>[^<]*${splitKeyword}[^<]*</h2>)`)
+          const match = html.match(h2Regex)
+
+          const externalLinks = (
+            <div className="my-6 rounded-xl border border-gray-200 bg-gray-50 p-5">
+              <h2 className="mb-4 text-sm font-bold text-gray-700">공식 사이트에서 신청하기</h2>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { label: '복지로 신청하기',    href: 'https://www.bokjiro.go.kr' },
+                  { label: '정부24 원스톱 신청', href: 'https://www.gov.kr' },
+                  { label: '아이사랑 보육포털',  href: 'https://www.childcare.go.kr' },
+                ].map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f1bc4] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1a17a0]"
+                  >
+                    {link.label} ↗
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+
+          if (!match) {
+            return (
+              <>
+                {externalLinks}
+                <div
+                  className="prose prose-gray max-w-none
+                    prose-headings:font-bold prose-headings:text-gray-900
+                    prose-h2:mt-10 prose-h2:text-xl prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2
+                    prose-p:text-gray-700 prose-p:leading-relaxed
+                    prose-a:text-[#1f1bc4] prose-a:no-underline hover:prose-a:underline"
+                  dangerouslySetInnerHTML={{ __html: html }}
+                />
+                <InternalLinkButtons links={internalLinks} />
+              </>
+            )
+          }
+
+          const splitIndex = html.indexOf(match[1])
+          const beforeHtml = html.slice(0, splitIndex)
+          const afterHtml  = html.slice(splitIndex)
+
+          const proseClass = `prose prose-gray max-w-none
             prose-headings:font-bold prose-headings:text-gray-900
             prose-h2:mt-10 prose-h2:text-xl prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2
-            prose-h3:mt-6 prose-h3:text-base prose-h3:text-[#1f1bc4]
             prose-p:text-gray-700 prose-p:leading-relaxed
-            prose-li:text-gray-700
-            prose-table:text-sm prose-th:bg-blue-50 prose-th:text-gray-700
-            prose-a:text-[#1f1bc4] prose-a:no-underline hover:prose-a:underline"
-          dangerouslySetInnerHTML={{ __html: benefit.content }}
-        />
+            prose-a:text-[#1f1bc4] prose-a:no-underline hover:prose-a:underline`
 
-        {/* 내부 링크 버튼 */}
-        <InternalLinkButtons links={internalLinks} />
-
-        {/* 공식 사이트 신청 */}
-        <div className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-5">
-          <h2 className="mb-4 text-sm font-bold text-gray-700">공식 사이트에서 신청하기</h2>
-          <div className="flex flex-wrap gap-3">
-            {[
-              { label: '복지로 신청하기',      href: 'https://www.bokjiro.go.kr' },
-              { label: '정부24 원스톱 신청',   href: 'https://www.gov.kr' },
-              { label: '아이사랑 보육포털',    href: 'https://www.childcare.go.kr' },
-            ].map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
-              >
-                {link.label} ↗
-              </a>
-            ))}
-          </div>
-        </div>
+          return (
+            <>
+              {externalLinks}
+              <div className={proseClass} dangerouslySetInnerHTML={{ __html: beforeHtml }} />
+              <InternalLinkButtons links={internalLinks} />
+              <div className={proseClass} dangerouslySetInnerHTML={{ __html: afterHtml }} />
+            </>
+          )
+        })()}
 
         {/* 관련 정책 */}
         <div className="mt-10">

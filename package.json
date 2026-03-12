@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "welfare:content": "node 1.welfare_content.js",
+    "welfare:post": "node 3.supabase_post.js",
+    "welfare:auto": "node 4.welfare_auto.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
