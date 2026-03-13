@@ -106,6 +106,20 @@ export async function getAllBenefitParams(): Promise<
   return allData
 }
 
+export async function getBenefitsByCity(
+  sido: string,
+  cityName: string,
+): Promise<Benefit[]> {
+  const { data, error } = await supabaseServer
+    .from('benefits')
+    .select('sido, city_name, policy_id, policy_name, title, slug')
+    .eq('sido', sido)
+    .eq('city_name', cityName)
+    .order('policy_id', { ascending: true })
+  if (error) return []
+  return (data ?? []) as Benefit[]
+}
+
 export async function getNationalBenefits(policyId: string): Promise<NationalBenefit[]> {
   const { data, error } = await supabaseServer
     .from('national_benefits')

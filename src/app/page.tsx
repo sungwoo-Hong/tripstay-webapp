@@ -1,96 +1,57 @@
 import Link from 'next/link'
-import { POLICIES, SIDO_LIST, SITE_NAME } from '@/lib/constants'
-import { getRecentBenefits } from '@/lib/supabase'
-import SearchBox from '@/components/SearchBox'
+import RegionSearchDropdown from '@/components/RegionSearchDropdown'
 
-export default async function HomePage() {
-  const recentBenefits = await getRecentBenefits(12)
+const POLICY_CARDS = [
+  { id: 'birth-support',       icon: '👶', name: '출산지원금',        amount: '지역마다 다름',    desc: '지자체별 출산 장려금 및 축하금' },
+  { id: 'first-voucher',       icon: '🎁', name: '첫만남이용권',      amount: '200만원~300만원',  desc: '출생아 대상 국민행복카드 바우처' },
+  { id: 'parental-benefit',    icon: '💰', name: '부모급여',          amount: '월 최대 100만원',  desc: '만 0~1세 아동 양육 가정 현금 지원' },
+  { id: 'child-allowance',     icon: '🧒', name: '아동수당',          amount: '월 10만원',        desc: '만 8세 미만 모든 아동 지급' },
+  { id: 'childcare-fee',       icon: '🏫', name: '보육료',            amount: '최대 월 54만원',   desc: '어린이집 이용 보육료 전액 지원' },
+  { id: 'nurturing-allowance', icon: '🏠', name: '양육수당',          amount: '월 최대 20만원',   desc: '가정양육 시 현금 지원' },
+  { id: 'postpartum-care',     icon: '🤱', name: '산모신생아건강관리', amount: '최대 200만원',     desc: '출산 후 건강관리사 가정 파견' },
+  { id: 'pregnancy-fee',       icon: '🏥', name: '임신출산진료비',    amount: '100만원',          desc: '임신·출산 의료비 국민행복카드 지원' },
+]
 
+export default function HomePage() {
   return (
     <div>
       {/* ── 히어로 섹션 ─────────────────────────────── */}
       <section className="bg-gradient-to-b from-blue-50 to-white px-4 py-14 text-center">
-        <h1 className="mb-3 text-4xl font-bold text-gray-900">{SITE_NAME}</h1>
-        <p className="mb-8 text-lg text-gray-600">
-          전국 250개 시/군/구 복지정책을 한 곳에서 확인하세요
-        </p>
-        <div className="mx-auto max-w-lg">
-          <SearchBox />
+        <h1 className="mb-3 text-4xl font-bold text-gray-900">
+          우리 아이를 위한 복지혜택, 한눈에 확인하세요
+        </h1>
+        <p className="mb-8 text-lg text-gray-600">전국 250개 시/군/구 복지정책 정보</p>
+        <div className="mx-auto max-w-2xl">
+          <RegionSearchDropdown />
         </div>
-        <p className="mt-3 text-sm text-gray-400">
-          예: 고양시, 강남구, 해운대구, 수원시 ...
-        </p>
       </section>
 
       <div className="mx-auto max-w-5xl px-4 py-10">
 
-        {/* ── 8개 정책 카드 ────────────────────────────── */}
-        <section className="mb-14">
-          <h2 className="mb-2 text-xl font-bold text-gray-900">정책별 보기</h2>
-          <p className="mb-6 text-sm text-gray-500">8개 핵심 복지정책을 지역별로 확인하세요</p>
+        {/* ── 전국 공통 혜택 카드 섹션 ─────────────────── */}
+        <section>
+          <h2 className="mb-2 text-xl font-bold text-gray-900">전국 공통 복지혜택</h2>
+          <p className="mb-6 text-sm text-gray-500">
+            소득·지역 관계없이 모든 가정이 받을 수 있는 혜택입니다
+          </p>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {POLICIES.map((policy) => (
+            {POLICY_CARDS.map((card) => (
               <Link
-                key={policy.id}
-                href={`/policy/${policy.id}`}
+                key={card.id}
+                href={`/policy/${card.id}`}
                 className="group flex flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
               >
-                <span className="text-3xl">{policy.icon}</span>
+                <span className="text-3xl">{card.icon}</span>
                 <span className="text-sm font-bold text-gray-900 group-hover:text-[#1f1bc4]">
-                  {policy.name}
+                  {card.name}
                 </span>
-                <span className="text-xs leading-snug text-gray-500">{policy.description}</span>
+                <span className="text-xs font-semibold text-[#1f1bc4]">{card.amount}</span>
+                <span className="text-xs leading-snug text-gray-500">{card.desc}</span>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* ── 최근 등록 지역 ───────────────────────────── */}
-        {recentBenefits.length > 0 && (
-          <section className="mb-14">
-            <h2 className="mb-2 text-xl font-bold text-gray-900">최근 등록 지역</h2>
-            <p className="mb-6 text-sm text-gray-500">새로 추가된 지역 복지정보입니다</p>
-            <div className="divide-y rounded-2xl border border-gray-200 bg-white shadow-sm">
-              {recentBenefits.map((item) => (
-                <Link
-                  key={`${item.sido}-${item.city_name}-${item.policy_id}`}
-                  href={`/${encodeURIComponent(item.sido)}/${encodeURIComponent(item.city_name)}/${item.policy_id}`}
-                  className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-blue-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-lg">
-                      {POLICIES.find((p) => p.id === item.policy_id)?.icon ?? '📋'}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {item.city_name} {item.policy_name}
-                      </p>
-                      <p className="text-xs text-gray-500">{item.sido}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-[#1f1bc4]">보기 →</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── 광역시도별 바로가기 ──────────────────────── */}
-        <section>
-          <h2 className="mb-2 text-xl font-bold text-gray-900">지역별 보기</h2>
-          <p className="mb-6 text-sm text-gray-500">광역시도를 선택하면 시/군/구 목록이 나옵니다</p>
-          <div className="flex flex-wrap gap-2">
-            {SIDO_LIST.map((sido) => (
-              <Link
-                key={sido}
-                href={`/region/${encodeURIComponent(sido)}`}
-                className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 transition-colors hover:border-[#1f1bc4] hover:bg-blue-50 hover:text-[#1f1bc4]"
-              >
-                {sido}
-              </Link>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   )
