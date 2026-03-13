@@ -43,7 +43,10 @@ export async function getBenefit(
     .eq('policy_id', policyId)
     .single()
 
-  if (error) return null
+  if (error) {
+    console.error('getBenefit error:', { sido, cityName, policyId, error })
+    return null
+  }
   return data
 }
 
