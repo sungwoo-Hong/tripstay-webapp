@@ -49,4 +49,4 @@ export const DUMMY_NATIONAL_BENEFITS = [
 ]
 
 export const SITE_NAME = '복지다모아'
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://welfare-webapp.vercel.app'
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.tripstay.co.kr'
