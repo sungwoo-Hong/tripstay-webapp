@@ -82,12 +82,23 @@ export async function getBenefitsBySido(sido: string): Promise<Benefit[]> {
 export async function getAllBenefitParams(): Promise<
   Array<{ sido: string; city_name: string; policy_id: string }>
 > {
-  const { data, error } = await supabaseServer
-    .from('benefits')
-    .select('sido, city_name, policy_id')
+  const allData: Array<{ sido: string; city_name: string; policy_id: string }> = []
+  const pageSize = 1000
+  let page = 0
 
-  if (error) return []
-  return data ?? []
+  while (true) {
+    const { data, error } = await supabaseServer
+      .from('benefits')
+      .select('sido, city_name, policy_id')
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+
+    if (error || !data || data.length === 0) break
+    allData.push(...data)
+    if (data.length < pageSize) break
+    page++
+  }
+
+  return allData
 }
 
 export async function getNationalBenefits(policyId: string): Promise<NationalBenefit[]> {
