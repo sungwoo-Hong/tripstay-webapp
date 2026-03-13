@@ -44,7 +44,9 @@ export async function getBenefit(
     .single()
 
   if (error) {
-    console.error('getBenefit error:', { sido, cityName, policyId, error })
+    if (error.code !== 'PGRST116') {
+      console.error('getBenefit error:', { sido, cityName, policyId, error })
+    }
     return null
   }
   return data
