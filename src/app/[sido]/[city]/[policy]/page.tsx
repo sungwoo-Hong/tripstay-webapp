@@ -18,8 +18,8 @@ export async function generateStaticParams() {
   const params = await getAllBenefitParams()
 
   return params.map((item) => ({
-    sido:   encodeURIComponent(item.sido),
-    city:   encodeURIComponent(item.city_name),
+    sido:   item.sido,
+    city:   item.city_name,
     policy: item.policy_id,
   }))
 }
@@ -27,24 +27,22 @@ export async function generateStaticParams() {
 // ── SEO 메타데이터 ────────────────────────────────────────
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { sido, city, policy } = await params
-  const sidoDecoded = decodeURIComponent(sido)
-  const cityDecoded = decodeURIComponent(city)
 
-  const benefit = await getBenefit(sidoDecoded, cityDecoded, policy)
+  const benefit = await getBenefit(sido, city, policy)
 
   // Supabase에 데이터 없으면 기본 메타데이터
   if (!benefit) {
     const policyObj = POLICIES.find((p) => p.id === policy)
-    const title     = `${cityDecoded} ${policyObj?.name ?? policy} 신청방법 및 지원금액`
+    const title     = `${city} ${policyObj?.name ?? policy} 신청방법 및 지원금액`
     return { title }
   }
 
-  const url = `${SITE_URL}/${sido}/${city}/${policy}`
+  const url = `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policy}`
 
   return {
     title:       benefit.title,
     description: benefit.meta_description ?? undefined,
-    keywords:    [...(benefit.tags ?? []), sidoDecoded, cityDecoded],
+    keywords:    [...(benefit.tags ?? []), sido, city],
     openGraph: {
       title:       benefit.title,
       description: benefit.meta_description ?? undefined,
@@ -86,22 +84,20 @@ function JsonLd({
 // ── 페이지 본문 ───────────────────────────────────────────
 export default async function BenefitDetailPage({ params }: PageProps) {
   const { sido, city, policy } = await params
-  const sidoDecoded = decodeURIComponent(sido)
-  const cityDecoded = decodeURIComponent(city)
 
   // Supabase에서 해당 지역×정책 콘텐츠 조회
-  const benefit          = await getBenefit(sidoDecoded, cityDecoded, policy)
+  const benefit          = await getBenefit(sido, city, policy)
   const nationalBenefits = await getNationalBenefits(policy)
 
   // 데이터 없으면 404
   if (!benefit) notFound()
 
   const policyObj = POLICIES.find((p) => p.id === policy)
-  const pageUrl   = `${SITE_URL}/${sido}/${city}/${policy}`
+  const pageUrl   = `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policy}`
 
   const internalLinks = [
     {
-      label: `${sidoDecoded} 전체 ${benefit.policy_name} 보기`,
+      label: `${sido} 전체 ${benefit.policy_name} 보기`,
       href:  `/region/${sido}`,
     },
     {
@@ -126,8 +122,8 @@ export default async function BenefitDetailPage({ params }: PageProps) {
         <Breadcrumb
           items={[
             { label: '홈', href: '/' },
-            { label: sidoDecoded, href: `/region/${sido}` },
-            { label: cityDecoded, href: `/region/${sido}` },
+            { label: sido, href: `/region/${sido}` },
+            { label: city, href: `/region/${sido}` },
             { label: benefit.policy_name },
           ]}
         />
@@ -137,9 +133,9 @@ export default async function BenefitDetailPage({ params }: PageProps) {
           {benefit.title}
         </h1>
         <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500">
-          <span>{sidoDecoded}</span>
+          <span>{sido}</span>
           <span>·</span>
-          <span>{cityDecoded}</span>
+          <span>{city}</span>
           <span>·</span>
           <span>{benefit.policy_name}</span>
           <span>·</span>
@@ -241,7 +237,7 @@ export default async function BenefitDetailPage({ params }: PageProps) {
         {/* 관련 정책 */}
         <div className="mt-10">
           <h2 className="mb-4 text-sm font-bold text-gray-700">
-            {cityDecoded} 다른 복지정책 보기
+            {city} 다른 복지정책 보기
           </h2>
           <div className="flex flex-wrap gap-2">
             {relatedPolicies.map((p) => (
