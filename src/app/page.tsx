@@ -56,29 +56,28 @@ export default async function HomePage() {
           <section className="mb-10">
             <h2 className="mb-1 text-xl font-bold text-gray-900">🏆 첫째아 출산지원금 TOP 5</h2>
             <p className="mb-5 text-sm text-gray-500">첫째아 기준 지역별 최대 출산장려금을 확인하세요</p>
-            <div className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-5 sm:overflow-visible sm:pb-0">
+            <div className="grid grid-cols-5 gap-2">
               {topBirthSupport.map((item, idx) => {
                 const rank = RANK_STYLES[idx] ?? RANK_STYLES[4]
                 return (
                   <Link
                     key={item.sido + item.city_name}
                     href={`/region/${encodeURIComponent(item.sido)}`}
-                    className="min-w-[140px] sm:min-w-0"
                   >
                     <Card
                       className={`h-full cursor-pointer border transition-all hover:-translate-y-0.5 hover:shadow-md ${rank.bg}`}
                     >
-                      <div className="flex flex-col items-center gap-2 p-4 text-center">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${rank.badgeCls}`}>
+                      <div className="flex flex-col items-center gap-1 p-2 text-center sm:gap-2 sm:p-4">
+                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold sm:px-2.5 sm:text-xs ${rank.badgeCls}`}>
                           {rank.badge}
                         </span>
-                        <span className="text-sm font-bold text-gray-900 leading-snug">
+                        <span className="text-[11px] font-bold text-gray-900 leading-snug sm:text-sm">
                           {item.city_name}
                         </span>
-                        <span className="text-base font-extrabold text-[#1f1bc4]">
+                        <span className="text-xs font-extrabold text-[#1f1bc4] sm:text-base">
                           {formatAmount(item.amount)}
                         </span>
-                        <span className="text-[11px] text-gray-400">첫째아 기준</span>
+                        <span className="hidden text-[11px] text-gray-400 sm:block">첫째아 기준</span>
                       </div>
                     </Card>
                   </Link>
