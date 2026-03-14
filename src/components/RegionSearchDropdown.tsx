@@ -43,7 +43,7 @@ export default function RegionSearchDropdown() {
   }
 
   const selectClass =
-    'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-700 outline-none focus:border-[#1f1bc4] focus:ring-2 focus:ring-[#1f1bc4]/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400'
+    'w-full rounded-xl border border-[#1f1bc4] bg-white px-4 py-3 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[#1f1bc4] disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200'
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
@@ -76,7 +76,7 @@ export default function RegionSearchDropdown() {
       <button
         onClick={handleSearch}
         disabled={!city}
-        className="rounded-xl bg-[#1f1bc4] px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1a17a0] disabled:cursor-not-allowed disabled:bg-gray-300 sm:whitespace-nowrap"
+        className="rounded-xl bg-[#1f1bc4] px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1a17a0] disabled:cursor-not-allowed disabled:opacity-70 sm:whitespace-nowrap"
       >
         복지혜택 찾기
       </button>

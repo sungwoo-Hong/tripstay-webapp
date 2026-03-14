@@ -168,6 +168,27 @@ export default async function BenefitDetailPage({ params }: PageProps) {
         {/* 전국 공통 혜택 표 */}
         <NationalBenefitsTable benefits={nationalBenefits} />
 
+        {/* 요약 카드 */}
+        <div className="my-6 rounded-xl border border-[#1f1bc4]/20 bg-blue-50 p-5">
+          <h2 className="mb-4 text-sm font-bold text-[#1f1bc4]">
+            💡 {cityDecoded} {benefit.policy_name} 핵심 정보
+          </h2>
+          <div className="grid grid-cols-3 gap-4 text-center text-sm">
+            <div>
+              <p className="text-gray-500">지원 대상</p>
+              <p className="font-bold text-gray-900">{cityDecoded} 출생아</p>
+            </div>
+            <div>
+              <p className="text-gray-500">신청 기간</p>
+              <p className="font-bold text-gray-900">출생 후 60일 이내</p>
+            </div>
+            <div>
+              <p className="text-gray-500">신청 방법</p>
+              <p className="font-bold text-gray-900">방문 · 온라인</p>
+            </div>
+          </div>
+        </div>
+
         {/* 광고 배너 */}
         <AdBanner className="my-6" />
 
@@ -181,19 +202,20 @@ export default async function BenefitDetailPage({ params }: PageProps) {
           const externalLinks = (
             <div className="my-6 rounded-xl border border-gray-200 bg-gray-50 p-5">
               <h2 className="mb-4 text-sm font-bold text-gray-700">공식 사이트에서 신청하기</h2>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 {[
-                  { label: '복지로 신청하기',    href: 'https://www.bokjiro.go.kr' },
-                  { label: '정부24 원스톱 신청', href: 'https://www.gov.kr' },
-                  { label: '아이사랑 보육포털',  href: 'https://www.childcare.go.kr' },
+                  { label: '복지로 신청하기',    href: 'https://www.bokjiro.go.kr', icon: '🏛' },
+                  { label: '정부24 원스톱 신청', href: 'https://www.gov.kr',        icon: '🏢' },
+                  { label: '아이사랑 보육포털',  href: 'https://www.childcare.go.kr', icon: '👶' },
                 ].map((link) => (
                   <a
                     key={link.href}
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f1bc4] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1a17a0]"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1f1bc4] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1a17a0] sm:w-auto sm:flex-1"
                   >
+                    <span>{link.icon}</span>
                     {link.label} ↗
                   </a>
                 ))}
@@ -239,22 +261,26 @@ export default async function BenefitDetailPage({ params }: PageProps) {
         })()}
 
         {/* 관련 정책 */}
-        <div className="mt-10">
+        <section className="mt-10">
           <h2 className="mb-4 text-sm font-bold text-gray-700">
             {cityDecoded} 다른 복지정책 보기
           </h2>
-          <div className="flex flex-wrap gap-2">
-            {relatedPolicies.map((p) => (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {relatedPolicies.slice(0, 4).map((p) => (
               <Link
                 key={p.id}
                 href={`/${sido}/${city}/${p.id}`}
-                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-600 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+                className="group rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
               >
-                {p.icon} {p.name}
+                <span className="text-2xl">{p.icon}</span>
+                <p className="mt-2 text-sm font-bold text-gray-900 group-hover:text-[#1f1bc4]">
+                  {p.name}
+                </p>
               </Link>
             ))}
           </div>
-        </div>
+        </section>
+        <AdBanner className="mt-6" />
 
         {/* 이전·다음 네비게이션 자리 (Phase 4+ 확장 가능) */}
         {policyObj && (

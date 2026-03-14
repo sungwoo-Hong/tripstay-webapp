@@ -16,7 +16,7 @@ export default function HomePage() {
   return (
     <div>
       {/* ── 히어로 섹션 ─────────────────────────────── */}
-      <section className="bg-gradient-to-b from-blue-50 to-white px-4 py-14 text-center">
+      <section className="bg-gradient-to-b from-[#EEF0FF] to-white px-4 py-14 text-center">
         <h1 className="mb-3 text-4xl font-bold text-gray-900">
           우리 아이를 위한 복지혜택, 한눈에 확인하세요
         </h1>

@@ -2,7 +2,27 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { POLICIES, SIDO_LIST, SITE_NAME } from '@/lib/constants'
+import { SITE_NAME } from '@/lib/constants'
+
+const SIDO_NAV = [
+  { label: '서울', full: '서울특별시' },
+  { label: '경기', full: '경기도' },
+  { label: '인천', full: '인천광역시' },
+  { label: '부산', full: '부산광역시' },
+  { label: '대전', full: '대전광역시' },
+  { label: '대구', full: '대구광역시' },
+  { label: '울산', full: '울산광역시' },
+  { label: '세종', full: '세종특별자치시' },
+  { label: '광주', full: '광주광역시' },
+  { label: '강원', full: '강원특별자치도' },
+  { label: '충북', full: '충청북도' },
+  { label: '충남', full: '충청남도' },
+  { label: '경북', full: '경상북도' },
+  { label: '경남', full: '경상남도' },
+  { label: '전북', full: '전북특별자치도' },
+  { label: '전남', full: '전라남도' },
+  { label: '제주', full: '제주특별자치도' },
+]
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false)
@@ -19,31 +39,16 @@ export default function MobileMenu() {
 
       {open && (
         <div className="fixed inset-0 top-14 z-40 overflow-y-auto bg-white px-4 py-6">
-          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">정책별</p>
-          <nav className="mb-8 grid grid-cols-2 gap-2">
-            {POLICIES.map((p) => (
-              <Link
-                key={p.id}
-                href={`/policy/${p.id}`}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2 text-sm text-gray-700 hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
-              >
-                <span>{p.icon}</span>
-                <span>{p.name}</span>
-              </Link>
-            ))}
-          </nav>
-
           <p className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">지역별</p>
-          <div className="flex flex-wrap gap-2">
-            {SIDO_LIST.map((sido) => (
+          <div className="grid grid-cols-3 gap-2">
+            {SIDO_NAV.map((item) => (
               <Link
-                key={sido}
-                href={`/region/${encodeURIComponent(sido)}`}
+                key={item.full}
+                href={`/region/${item.full}`}
                 onClick={() => setOpen(false)}
-                className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:text-[#1f1bc4]"
+                className="flex items-center justify-center rounded-xl border border-gray-100 px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
               >
-                {sido}
+                {item.label}
               </Link>
             ))}
           </div>
