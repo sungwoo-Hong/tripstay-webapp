@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import RegionSearchDropdown from '@/components/RegionSearchDropdown'
 import AdBanner from '@/components/AdBanner'
+import { getTopBirthSupport, type TopBirthSupportItem } from '@/lib/supabase'
+import { Card } from '@/components/ui/card'
 
 const POLICY_CARDS = [
   { id: 'birth-support',       icon: '👶', name: '출산지원금',        amount: '지역마다 다름',    desc: '지자체별 출산 장려금 및 축하금' },
@@ -13,7 +15,27 @@ const POLICY_CARDS = [
   { id: 'pregnancy-fee',       icon: '🏥', name: '임신출산진료비',    amount: '100만원',          desc: '임신·출산 의료비 국민행복카드 지원' },
 ]
 
-export default function HomePage() {
+const RANK_STYLES = [
+  { badge: '🥇', bg: 'bg-yellow-50 border-yellow-200', badgeCls: 'bg-yellow-100 text-yellow-700' },
+  { badge: '🥈', bg: 'bg-gray-50 border-gray-200',    badgeCls: 'bg-gray-100 text-gray-600' },
+  { badge: '🥉', bg: 'bg-orange-50 border-orange-200', badgeCls: 'bg-orange-100 text-orange-700' },
+  { badge: '4위', bg: 'bg-white border-gray-200',       badgeCls: 'bg-gray-100 text-gray-500' },
+  { badge: '5위', bg: 'bg-white border-gray-200',       badgeCls: 'bg-gray-100 text-gray-500' },
+]
+
+function formatAmount(amount: number): string {
+  // DB는 만원 단위 정수로 저장 (예: 440 → 440만원)
+  return amount.toLocaleString('ko-KR') + '만원'
+}
+
+export default async function HomePage() {
+  let topBirthSupport: TopBirthSupportItem[] = []
+  try {
+    topBirthSupport = await getTopBirthSupport(5)
+  } catch {
+    // 에러 시 섹션 전체 skip
+  }
+
   return (
     <div>
       {/* ── 히어로 섹션 ─────────────────────────────── */}
@@ -28,6 +50,44 @@ export default function HomePage() {
       </section>
 
       <div className="mx-auto max-w-5xl px-4 py-10">
+
+        {/* TOP5 첫째아 출산지원금 섹션 시작 */}
+        {topBirthSupport.length > 0 && (
+          <section className="mb-10">
+            <h2 className="mb-1 text-xl font-bold text-gray-900">🏆 첫째아 출산지원금 TOP 5</h2>
+            <p className="mb-5 text-sm text-gray-500">첫째아 기준 지역별 최대 출산장려금을 확인하세요</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-5 sm:overflow-visible sm:pb-0">
+              {topBirthSupport.map((item, idx) => {
+                const rank = RANK_STYLES[idx] ?? RANK_STYLES[4]
+                return (
+                  <Link
+                    key={item.sido + item.city_name}
+                    href={`/region/${encodeURIComponent(item.sido)}`}
+                    className="min-w-[140px] sm:min-w-0"
+                  >
+                    <Card
+                      className={`h-full cursor-pointer border transition-all hover:-translate-y-0.5 hover:shadow-md ${rank.bg}`}
+                    >
+                      <div className="flex flex-col items-center gap-2 p-4 text-center">
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${rank.badgeCls}`}>
+                          {rank.badge}
+                        </span>
+                        <span className="text-sm font-bold text-gray-900 leading-snug">
+                          {item.city_name}
+                        </span>
+                        <span className="text-base font-extrabold text-[#1f1bc4]">
+                          {formatAmount(item.amount)}
+                        </span>
+                        <span className="text-[11px] text-gray-400">첫째아 기준</span>
+                      </div>
+                    </Card>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
+        {/* TOP5 첫째아 출산지원금 섹션 끝 */}
 
         {/* ── 전국 공통 혜택 카드 섹션 ─────────────────── */}
         <section>

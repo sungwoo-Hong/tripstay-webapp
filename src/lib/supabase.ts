@@ -141,3 +141,23 @@ export async function getRecentBenefits(limit = 12): Promise<Benefit[]> {
   if (error) return []
   return (data ?? []) as Benefit[]
 }
+
+export type TopBirthSupportItem = {
+  title: string
+  sido: string
+  city_name: string
+  amount: number
+}
+
+export async function getTopBirthSupport(limit = 5): Promise<TopBirthSupportItem[]> {
+  const { data, error } = await supabaseServer
+    .from('benefits')
+    .select('title, sido, city_name, amount')
+    .eq('policy_id', 'birth-support')
+    .not('amount', 'is', null)
+    .order('amount', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return (data ?? []) as TopBirthSupportItem[]
+}
