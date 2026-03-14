@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { SITE_NAME } from '@/lib/constants'
 
 const SIDO_NAV = [
@@ -28,7 +27,6 @@ const SIDO_NAV = [
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -39,11 +37,6 @@ export default function Header() {
     if (isOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen])
-
-  function handleSidoClick(full: string) {
-    setIsOpen(false)
-    router.push(`/region/${full}`)
-  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
@@ -85,13 +78,14 @@ export default function Header() {
           <p className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">지역별</p>
           <div className="grid grid-cols-3 gap-2">
             {SIDO_NAV.map((item) => (
-              <button
+              <Link
                 key={item.full}
-                onClick={() => handleSidoClick(item.full)}
+                href={`/region/${encodeURIComponent(item.full)}`}
+                onClick={() => setIsOpen(false)}
                 className="flex items-center justify-center rounded-xl border border-gray-100 px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
               >
                 {item.label}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
