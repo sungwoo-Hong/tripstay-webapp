@@ -1,6 +1,9 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { SITE_NAME } from '@/lib/constants'
-import MobileMenu from '@/components/MobileMenu'
 
 const SIDO_NAV = [
   { label: '서울', full: '서울특별시' },
@@ -23,9 +26,28 @@ const SIDO_NAV = [
 ]
 
 export default function Header() {
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
+
+  function handleSidoClick(full: string) {
+    setIsOpen(false)
+    router.push(`/region/${full}`)
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+      <div ref={menuRef} className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         {/* 로고 */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <span className="text-xl font-bold text-[#1f1bc4]">{SITE_NAME}</span>
@@ -35,7 +57,7 @@ export default function Header() {
         </Link>
 
         {/* PC 네비게이션 - 17개 시도 */}
-        <nav className="hidden items-center gap-1.5 overflow-x-auto text-xs sm:flex">
+        <nav className="hidden items-center gap-1.5 text-xs sm:flex">
           {SIDO_NAV.map((item) => (
             <Link
               key={item.full}
@@ -47,9 +69,33 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* 모바일 메뉴 */}
-        <MobileMenu />
+        {/* 모바일 햄버거 버튼 */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label="메뉴 열기"
+          className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 sm:hidden"
+        >
+          <span className="text-xl">{isOpen ? '✕' : '☰'}</span>
+        </button>
       </div>
+
+      {/* 모바일 드로어 */}
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-14 z-40 overflow-y-auto bg-white px-4 py-6 shadow-lg sm:hidden">
+          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">지역별</p>
+          <div className="grid grid-cols-3 gap-2">
+            {SIDO_NAV.map((item) => (
+              <button
+                key={item.full}
+                onClick={() => handleSidoClick(item.full)}
+                className="flex items-center justify-center rounded-xl border border-gray-100 px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

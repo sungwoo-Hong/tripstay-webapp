@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import NationalBenefitsTable from '@/components/NationalBenefitsTable'
-import InternalLinkButtons from '@/components/InternalLinkButtons'
 import AdBanner from '@/components/AdBanner'
 import Breadcrumb from '@/components/Breadcrumb'
 import { POLICIES, SITE_URL } from '@/lib/constants'
@@ -96,20 +95,7 @@ export default async function BenefitDetailPage({ params }: PageProps) {
   // 데이터 없으면 404
   if (!benefit) notFound()
 
-  const policyObj = POLICIES.find((p) => p.id === policy)
-  const pageUrl   = `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policy}`
-
-  const internalLinks = [
-    {
-      label: `${sidoDecoded} 전체 ${benefit.policy_name} 보기`,
-      href:  `/region/${sido}`,
-    },
-    {
-      label: `전국 ${benefit.policy_name} 모아보기`,
-      href:  `/policy/${policy}`,
-    },
-    { label: '복지정책 전체보기', href: '/' },
-  ]
+  const pageUrl = `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policy}`
 
   const relatedPolicies = POLICIES.filter((p) => p.id !== policy)
 
@@ -189,9 +175,6 @@ export default async function BenefitDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* 광고 배너 */}
-        <AdBanner className="my-6" />
-
         {/* 본문 콘텐츠 - h2[신청 방법 및 자격] 기준으로 분리 */}
         {(() => {
           const html = benefit.content
@@ -235,7 +218,6 @@ export default async function BenefitDetailPage({ params }: PageProps) {
                     prose-a:text-[#1f1bc4] prose-a:no-underline hover:prose-a:underline"
                   dangerouslySetInnerHTML={{ __html: html }}
                 />
-                <InternalLinkButtons links={internalLinks} />
               </>
             )
           }
@@ -254,15 +236,36 @@ export default async function BenefitDetailPage({ params }: PageProps) {
             <>
               {externalLinks}
               <div className={proseClass} dangerouslySetInnerHTML={{ __html: beforeHtml }} />
-              <InternalLinkButtons links={internalLinks} />
               <div className={proseClass} dangerouslySetInnerHTML={{ __html: afterHtml }} />
             </>
           )
         })()}
 
-        {/* 관련 정책 */}
-        <section className="mt-10">
-          <h2 className="mb-4 text-sm font-bold text-gray-700">
+        {/* 하단 통합 박스 */}
+        <section className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-5">
+          <h2 className="mb-3 text-sm font-bold text-gray-700">관련 정보 더 보기</h2>
+          <div className="mb-5 flex flex-wrap gap-2">
+            <Link
+              href={`/region/${sido}`}
+              className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+            >
+              {sidoDecoded} 전체 {benefit.policy_name} 보기
+            </Link>
+            <Link
+              href={`/policy/${policy}`}
+              className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+            >
+              전국 {benefit.policy_name} 모아보기
+            </Link>
+            <Link
+              href="/"
+              className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-600 hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+            >
+              복지정책 전체보기
+            </Link>
+          </div>
+
+          <h2 className="mb-3 text-sm font-bold text-gray-700">
             {cityDecoded} 다른 복지정책 보기
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -280,18 +283,7 @@ export default async function BenefitDetailPage({ params }: PageProps) {
             ))}
           </div>
         </section>
-        <AdBanner className="mt-6" />
-
-        {/* 이전·다음 네비게이션 자리 (Phase 4+ 확장 가능) */}
-        {policyObj && (
-          <div className="mt-8 border-t pt-6 text-xs text-gray-400">
-            이 페이지는{' '}
-            <Link href={`/policy/${policy}`} className="text-[#1f1bc4] hover:underline">
-              전국 {policyObj.name} 목록
-            </Link>
-            의 일부입니다.
-          </div>
-        )}
+        <AdBanner className="mt-6 min-h-0" />
       </article>
     </>
   )

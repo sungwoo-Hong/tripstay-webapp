@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import RegionSearchDropdown from '@/components/RegionSearchDropdown'
+import AdBanner from '@/components/AdBanner'
 
 const POLICY_CARDS = [
   { id: 'birth-support',       icon: '👶', name: '출산지원금',        amount: '지역마다 다름',    desc: '지자체별 출산 장려금 및 축하금' },
@@ -51,6 +52,8 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        <AdBanner className="hidden sm:block mt-6" />
 
       </div>
     </div>
