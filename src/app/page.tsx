@@ -62,7 +62,7 @@ export default async function HomePage() {
                 return (
                   <Link
                     key={item.sido + item.city_name}
-                    href={`/region/${encodeURIComponent(item.sido)}`}
+                    href={`/${encodeURIComponent(item.sido)}/${encodeURIComponent(item.city_name)}/birth-support`}
                   >
                     <Card
                       className={`h-full cursor-pointer border transition-all hover:-translate-y-0.5 hover:shadow-md ${rank.bg}`}
