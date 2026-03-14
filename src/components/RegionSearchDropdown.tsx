@@ -39,7 +39,7 @@ export default function RegionSearchDropdown() {
 
   function handleSearch() {
     if (!sido || !city) return
-    router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}`)
+    router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/birth-support`)
   }
 
   const selectClass =
