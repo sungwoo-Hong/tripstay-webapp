@@ -97,8 +97,6 @@ export default async function BenefitDetailPage({ params }: PageProps) {
 
   const pageUrl = `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policy}`
 
-  const relatedPolicies = POLICIES.filter((p) => p.id !== policy)
-
   return (
     <>
       <JsonLd
@@ -243,6 +241,7 @@ export default async function BenefitDetailPage({ params }: PageProps) {
 
         {/* 하단 통합 박스 */}
         <section className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-5">
+          {/* 상단: 시도/전국/홈 내비게이션 */}
           <h2 className="mb-3 text-sm font-bold text-gray-700">관련 정보 더 보기</h2>
           <div className="mb-5 flex flex-wrap gap-2">
             <Link
@@ -265,18 +264,19 @@ export default async function BenefitDetailPage({ params }: PageProps) {
             </Link>
           </div>
 
+          {/* 하단: 현재 페이지 제외한 전체 정책 카드 */}
           <h2 className="mb-3 text-sm font-bold text-gray-700">
             {cityDecoded} 다른 복지정책 보기
           </h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {relatedPolicies.slice(0, 4).map((p) => (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {POLICIES.filter((p) => p.id !== policy).map((p) => (
               <Link
                 key={p.id}
                 href={`/${sido}/${city}/${p.id}`}
                 className="group rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
               >
                 <span className="text-2xl">{p.icon}</span>
-                <p className="mt-2 text-sm font-bold text-gray-900 group-hover:text-[#1f1bc4]">
+                <p className="mt-2 text-xs font-bold text-gray-900 group-hover:text-[#1f1bc4] leading-snug">
                   {p.name}
                 </p>
               </Link>

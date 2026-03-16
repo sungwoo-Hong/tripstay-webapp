@@ -9,6 +9,12 @@ export const POLICIES: Policy[] = [
   { id: 'nurturing-allowance', name: '양육수당', icon: '🏠', description: '가정양육 시 양육수당 지원' },
   { id: 'postpartum-care', name: '산모신생아건강관리', icon: '🤱', description: '출산 후 건강관리사 파견 지원' },
   { id: 'pregnancy-fee', name: '임신출산진료비', icon: '🏥', description: '임신·출산 의료비 국민행복카드 지원' },
+  { id: 'postpartum-fee', name: '산후조리비', icon: '🏥', description: '지자체별 산후조리비 지원금' },
+  { id: 'maternal-traffic', name: '임산부 교통비', icon: '🚌', description: '임산부 교통비 지원 (지자체별 상이)' },
+  { id: 'newborn-supplies', name: '신생아 용품 지원', icon: '🍼', description: '기저귀·유모차 등 신생아 용품 지원' },
+  { id: 'multiple-children', name: '다자녀 추가 지원', icon: '👨‍👩‍👧‍👦', description: '셋째 이상 다자녀 추가 혜택 (지자체별 상이)' },
+  { id: 'prenatal-health', name: '임산부 건강관리비', icon: '🤰', description: '임산부 건강검진 및 관리비 지원' },
+  { id: 'newlywed-support', name: '신혼부부 지원', icon: '💑', description: '결혼축하금·주거비 등 신혼부부 혜택' },
 ]
 
 export const SIDO_LIST = [
