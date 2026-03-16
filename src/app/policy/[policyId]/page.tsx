@@ -54,10 +54,12 @@ export default async function PolicyListPage({ params }: PageProps) {
       </div>
 
       {/* 전국 공통 혜택 */}
-      <section className="mb-8">
-        <h2 className="mb-3 text-lg font-bold text-gray-800">전국 공통 혜택</h2>
-        <NationalBenefitsTable benefits={nationalBenefits} />
-      </section>
+      {nationalBenefits.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-lg font-bold text-gray-800">전국 공통 혜택</h2>
+          <NationalBenefitsTable benefits={nationalBenefits} />
+        </section>
+      )}
 
       {/* 광고 */}
       <AdBanner className="mb-8" />
