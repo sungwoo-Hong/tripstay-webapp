@@ -3,6 +3,7 @@ import RegionSearchDropdown from '@/components/RegionSearchDropdown'
 import AdBanner from '@/components/AdBanner'
 import { getTopBirthSupport, type TopBirthSupportItem } from '@/lib/supabase'
 import { Card } from '@/components/ui/card'
+import { LOCAL_ONLY_POLICIES } from '@/lib/constants'
 
 const POLICY_CARDS = [
   { id: 'birth-support',       icon: '👶', name: '출산지원금',        amount: '지역마다 다름',    desc: '지자체별 출산 장려금 및 축하금' },
@@ -87,6 +88,27 @@ export default async function HomePage() {
           </section>
         )}
         {/* TOP5 첫째아 출산지원금 섹션 끝 */}
+
+        {/* 지자체별 복지혜택 */}
+        <section className="mt-12">
+          <h2 className="mb-2 text-xl font-bold text-gray-900">지자체별 복지혜택</h2>
+          <p className="mb-6 text-sm text-gray-500">지역마다 금액과 조건이 다른 복지혜택을 확인하세요</p>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {LOCAL_ONLY_POLICIES.map((policy) => (
+              <Link
+                key={policy.id}
+                href={`/policy/${policy.id}`}
+                className="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
+              >
+                <span className="text-3xl">{policy.icon}</span>
+                <p className="mt-3 text-sm font-bold text-gray-900 group-hover:text-[#1f1bc4]">
+                  {policy.name}
+                </p>
+                <p className="mt-1 text-xs text-gray-500">{policy.description}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* ── 전국 공통 혜택 카드 섹션 ─────────────────── */}
         <section>

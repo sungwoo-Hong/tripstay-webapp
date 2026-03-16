@@ -5,7 +5,7 @@ import NationalBenefitsTable from '@/components/NationalBenefitsTable'
 import AdBanner from '@/components/AdBanner'
 import Breadcrumb from '@/components/Breadcrumb'
 import { POLICIES, SITE_URL } from '@/lib/constants'
-import { getAllBenefitParams, getBenefit, getNationalBenefits } from '@/lib/supabase'
+import { getAllBenefitParams, getBenefit, getNationalBenefits, getCityPolicies } from '@/lib/supabase'
 
 interface PageProps {
   params: Promise<{ sido: string; city: string; policy: string }>
@@ -94,6 +94,12 @@ export default async function BenefitDetailPage({ params }: PageProps) {
 
   // 데이터 없으면 404
   if (!benefit) notFound()
+
+  // 해당 시군구에 실제 존재하는 정책만 표시 → 클릭 시 404 방지
+  const cityPolicyIds   = await getCityPolicies(sidoDecoded, cityDecoded)
+  const relatedPolicies = POLICIES.filter(
+    (p) => p.id !== policy && cityPolicyIds.includes(p.id)
+  )
 
   const pageUrl = `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policy}`
 
@@ -269,7 +275,7 @@ export default async function BenefitDetailPage({ params }: PageProps) {
             {cityDecoded} 다른 복지정책 보기
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {POLICIES.filter((p) => p.id !== policy).map((p) => (
+            {relatedPolicies.map((p) => (
               <Link
                 key={p.id}
                 href={`/${sido}/${city}/${p.id}`}

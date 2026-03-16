@@ -149,6 +149,18 @@ export type TopBirthSupportItem = {
   amount: number
 }
 
+/** 특정 시군구에 실제 존재하는 policy_id 목록 조회 */
+export async function getCityPolicies(sido: string, cityName: string): Promise<string[]> {
+  const { data, error } = await supabaseServer
+    .from('benefits')
+    .select('policy_id')
+    .eq('sido', sido)
+    .eq('city_name', cityName)
+
+  if (error || !data) return []
+  return [...new Set(data.map((d) => d.policy_id))]
+}
+
 export async function getTopBirthSupport(limit = 5): Promise<TopBirthSupportItem[]> {
   const { data, error } = await supabaseServer
     .from('benefits')

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { SEARCH_POLICIES } from '@/lib/constants'
 
 const REGION_DATA: Record<string, string[]> = {
   '서울특별시': ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'],
@@ -28,6 +29,7 @@ const SIDO_LIST = Object.keys(REGION_DATA)
 export default function RegionSearchDropdown() {
   const [sido, setSido] = useState('')
   const [city, setCity] = useState('')
+  const [policy, setPolicy] = useState('')
   const router = useRouter()
 
   const cities = sido ? (REGION_DATA[sido] ?? []) : []
@@ -39,7 +41,8 @@ export default function RegionSearchDropdown() {
 
   function handleSearch() {
     if (!sido || !city) return
-    router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/birth-support`)
+    const policyId = policy || 'birth-support'
+    router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policyId}`)
   }
 
   const selectClass =
@@ -69,6 +72,18 @@ export default function RegionSearchDropdown() {
         <option value="">시/군/구 선택</option>
         {cities.map((c) => (
           <option key={c} value={c}>{c}</option>
+        ))}
+      </select>
+
+      {/* 혜택 항목 드롭다운 */}
+      <select
+        value={policy}
+        onChange={(e) => setPolicy(e.target.value)}
+        className={selectClass}
+      >
+        <option value="">혜택 항목 선택</option>
+        {SEARCH_POLICIES.map((p) => (
+          <option key={p.id} value={p.id}>{p.name}</option>
         ))}
       </select>
 

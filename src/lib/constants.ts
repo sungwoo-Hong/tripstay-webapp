@@ -17,6 +17,18 @@ export const POLICIES: Policy[] = [
   { id: 'newlywed-support', name: '신혼부부 지원', icon: '💑', description: '결혼축하금·주거비 등 신혼부부 혜택' },
 ]
 
+// 전국 공통 정책 (기존 8개)
+export const NATIONAL_POLICIES = POLICIES.slice(0, 8)
+
+// 지자체별 정책 (신규 6개) - 지역마다 내용이 다른 정책
+export const LOCAL_ONLY_POLICIES = POLICIES.slice(8)
+
+// 드롭다운 검색 대상 정책 (출산지원금 + 신규 6개)
+export const SEARCH_POLICIES = [
+  POLICIES[0], // birth-support 출산지원금
+  ...POLICIES.slice(8), // 신규 6개
+]
+
 export const SIDO_LIST = [
   '서울특별시',
   '부산광역시',
