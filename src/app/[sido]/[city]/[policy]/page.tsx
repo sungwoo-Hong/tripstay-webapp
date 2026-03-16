@@ -92,8 +92,46 @@ export default async function BenefitDetailPage({ params }: PageProps) {
   const benefit          = await getBenefit(sidoDecoded, cityDecoded, policy)
   const nationalBenefits = await getNationalBenefits(policy)
 
-  // 데이터 없으면 404
-  if (!benefit) notFound()
+  // 데이터 없으면 안내 페이지 표시
+  if (!benefit) {
+    const policyObj = POLICIES.find((p) => p.id === policy)
+    return (
+      <article className="mx-auto max-w-3xl px-4 py-8">
+        <Breadcrumb
+          items={[
+            { label: '홈', href: '/' },
+            { label: sidoDecoded, href: `/region/${sido}` },
+            { label: cityDecoded, href: `/region/${sido}` },
+            { label: policyObj?.name ?? policy },
+          ]}
+        />
+        <div className="mt-8 rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
+          <p className="text-4xl">😔</p>
+          <h1 className="mt-4 text-xl font-bold text-gray-900">
+            {cityDecoded} {policyObj?.name ?? policy} 지원 내용이 없습니다
+          </h1>
+          <p className="mt-3 text-sm text-gray-500">
+            {cityDecoded}에서는 현재 해당 복지정책을 운영하지 않거나<br />
+            지원 정보가 등록되지 않았습니다.
+          </p>
+          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href={`/policy/${policy}`}
+              className="rounded-lg bg-[#1f1bc4] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1a17a0]"
+            >
+              전국 {policyObj?.name ?? policy} 지역 보기
+            </Link>
+            <Link
+              href="/"
+              className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+            >
+              다른 복지정책 찾기
+            </Link>
+          </div>
+        </div>
+      </article>
+    )
+  }
 
   // 해당 시군구에 실제 존재하는 정책만 표시 → 클릭 시 404 방지
   const cityPolicyIds   = await getCityPolicies(sidoDecoded, cityDecoded)
