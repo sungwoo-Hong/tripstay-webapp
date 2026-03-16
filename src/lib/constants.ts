@@ -9,12 +9,66 @@ export const POLICIES: Policy[] = [
   { id: 'nurturing-allowance', name: '양육수당', icon: '🏠', description: '가정양육 시 양육수당 지원' },
   { id: 'postpartum-care', name: '산모신생아건강관리', icon: '🤱', description: '출산 후 건강관리사 파견 지원' },
   { id: 'pregnancy-fee', name: '임신출산진료비', icon: '🏥', description: '임신·출산 의료비 국민행복카드 지원' },
-  { id: 'postpartum-fee', name: '산후조리비', icon: '🏥', description: '지자체별 산후조리비 지원금' },
-  { id: 'maternal-traffic', name: '임산부 교통비', icon: '🚌', description: '임산부 교통비 지원 (지자체별 상이)' },
-  { id: 'newborn-supplies', name: '신생아 용품 지원', icon: '🍼', description: '기저귀·유모차 등 신생아 용품 지원' },
-  { id: 'multiple-children', name: '다자녀 추가 지원', icon: '👨‍👩‍👧‍👦', description: '셋째 이상 다자녀 추가 혜택 (지자체별 상이)' },
-  { id: 'prenatal-health', name: '임산부 건강관리비', icon: '🤰', description: '임산부 건강검진 및 관리비 지원' },
-  { id: 'newlywed-support', name: '신혼부부 지원', icon: '💑', description: '결혼축하금·주거비 등 신혼부부 혜택' },
+  {
+    id: 'postpartum-fee', name: '산후조리비', icon: '🏥',
+    description: '지자체별 산후조리비 지원금',
+    keyPoints: [
+      '지원 대상: 관내 주민등록을 둔 출산 가정',
+      '지원 금액: 지자체별 상이 (20만원~200만원)',
+      '신청 기간: 출생일로부터 6개월~1년 이내',
+      '신청 방법: 주민센터 방문 또는 복지로 온라인 신청',
+    ],
+  },
+  {
+    id: 'maternal-traffic', name: '임산부 교통비', icon: '🚌',
+    description: '임산부 교통비 지원 (지자체별 상이)',
+    keyPoints: [
+      '지원 대상: 임신 확인서를 제출한 관내 임산부',
+      '지원 금액: 10만원 내외 교통카드 또는 지역화폐 지급',
+      '신청 장소: 보건소 또는 주민센터',
+      '신청 방법: 임신확인서·신분증 지참 후 방문 신청',
+    ],
+  },
+  {
+    id: 'newborn-supplies', name: '신생아 용품 지원', icon: '🍼',
+    description: '기저귀·유모차 등 신생아 용품 지원',
+    keyPoints: [
+      '지원 대상: 관내 출생 신생아 가정',
+      '지원 내용: 기저귀, 물티슈, 유모차, 카시트 등 현물 지급',
+      '신청 기간: 출생 후 6개월~1년 이내',
+      '신청 방법: 보건소 또는 주민센터 방문 신청',
+    ],
+  },
+  {
+    id: 'multiple-children', name: '다자녀 추가 지원', icon: '👨‍👩‍👧‍👦',
+    description: '다자녀 가정 추가 혜택 (지자체별 상이)',
+    keyPoints: [
+      '지원 대상: 관내 거주 다자녀(2자녀 이상) 가정',
+      '지원 내용: 교육비·의료비·문화시설 할인, 현금 지원 등',
+      '지원 금액: 지자체별 상이',
+      '신청 방법: 주민센터 방문 신청',
+    ],
+  },
+  {
+    id: 'prenatal-health', name: '임산부 건강관리비', icon: '🤰',
+    description: '임산부 건강검진 및 관리비 지원',
+    keyPoints: [
+      '지원 대상: 관내 주민등록을 둔 임산부',
+      '지원 금액: 20만원 내외 (지자체별 상이)',
+      '지원 방식: 지역화폐 또는 국민행복카드 충전',
+      '신청 방법: 보건소 또는 주민센터 방문',
+    ],
+  },
+  {
+    id: 'newlywed-support', name: '신혼부부 지원', icon: '💑',
+    description: '결혼축하금·주거비 등 신혼부부 혜택',
+    keyPoints: [
+      '지원 대상: 관내 거주 신혼부부 (혼인 후 일정 기간 이내)',
+      '지원 내용: 결혼축하금, 주거비 지원, 대출이자 지원 등',
+      '지원 금액: 지자체별 상이 (30만원~500만원)',
+      '신청 방법: 주민센터 방문 신청',
+    ],
+  },
 ]
 
 // 전국 공통 정책 (기존 8개)

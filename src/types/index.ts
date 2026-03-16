@@ -10,6 +10,11 @@ export type Benefit = {
   tags: string[]
   slug: string
   created_at: string
+  amount: number | null
+  raw_content: string | null
+  target: string | null
+  application_method: string | null
+  application_period: string | null
 }
 
 export type NationalBenefit = {
@@ -26,6 +31,7 @@ export type Policy = {
   name: string
   icon: string
   description: string
+  keyPoints?: string[]
 }
 
 export type Region = {

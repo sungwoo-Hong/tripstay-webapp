@@ -53,6 +53,26 @@ export default async function PolicyListPage({ params }: PageProps) {
         <p className="text-gray-500">{policy.description}</p>
       </div>
 
+      {/* 정책 핵심 안내 */}
+      {policy.keyPoints && policy.keyPoints.length > 0 && (
+        <section className="mb-8 rounded-xl border border-[#1f1bc4]/20 bg-blue-50 p-5">
+          <h2 className="mb-3 text-sm font-bold text-[#1f1bc4]">
+            💡 {policy.name} 주요 안내
+          </h2>
+          <ul className="space-y-2">
+            {policy.keyPoints.map((point) => (
+              <li key={point} className="flex items-start gap-2 text-sm text-gray-700">
+                <span className="mt-0.5 text-[#1f1bc4]">✓</span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-gray-400">
+            ※ 지원 금액·대상·신청 기간은 지자체마다 다릅니다. 아래 지역을 선택해 정확한 정보를 확인하세요.
+          </p>
+        </section>
+      )}
+
       {/* 전국 공통 혜택 */}
       {nationalBenefits.length > 0 && (
         <section className="mb-8">

@@ -204,15 +204,21 @@ export default async function BenefitDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-3 gap-4 text-center text-sm">
             <div>
               <p className="text-gray-500">지원 대상</p>
-              <p className="font-bold text-gray-900">{cityDecoded} 출생아</p>
+              <p className="font-bold text-gray-900">
+                {benefit.target ?? `${cityDecoded} 주민`}
+              </p>
             </div>
             <div>
               <p className="text-gray-500">신청 기간</p>
-              <p className="font-bold text-gray-900">출생 후 60일 이내</p>
+              <p className="font-bold text-gray-900">
+                {benefit.application_period ?? '담당부서 문의'}
+              </p>
             </div>
             <div>
               <p className="text-gray-500">신청 방법</p>
-              <p className="font-bold text-gray-900">방문 · 온라인</p>
+              <p className="font-bold text-gray-900">
+                {benefit.application_method ?? '방문 신청'}
+              </p>
             </div>
           </div>
         </div>
