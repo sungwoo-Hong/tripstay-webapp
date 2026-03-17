@@ -51,6 +51,16 @@ export default async function PolicyListPage({ params }: PageProps) {
         <p className="text-gray-500">{policy.description}</p>
       </div>
 
+      {/* 우리 지역 혜택 확인 */}
+      <section className="mb-8">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+          <p className="mb-4 text-center text-base font-bold text-gray-800">
+            우리 지역 <span className="text-[#1f1bc4]">{policy.name}</span> 확인해보세요
+          </p>
+          <RegionSearchDropdown targetPolicy={policyId} />
+        </div>
+      </section>
+
       {/* 정책 핵심 안내 */}
       {policy.keyPoints && policy.keyPoints.length > 0 && (
         <section className="mb-8 rounded-xl border border-[#1f1bc4]/20 bg-blue-50 p-5">
@@ -81,16 +91,6 @@ export default async function PolicyListPage({ params }: PageProps) {
 
       {/* 광고 */}
       <AdBanner className="mb-8" />
-
-      {/* 우리 지역 혜택 확인 */}
-      <section className="mb-8">
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
-          <p className="mb-4 text-center text-base font-bold text-gray-800">
-            우리 지역 <span className="text-[#1f1bc4]">{policy.name}</span> 확인해보세요
-          </p>
-          <RegionSearchDropdown targetPolicy={policyId} />
-        </div>
-      </section>
 
       {/* 다른 정책 바로가기 */}
       <section className="mt-12">

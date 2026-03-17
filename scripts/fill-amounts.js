@@ -1,8 +1,9 @@
 /**
  * scripts/fill-amounts.js
  *
- * birth-support 레코드에서 amount(만원)가 null인 항목을 찾아
+ * birth-support 레코드에서 amount(원)가 null인 항목을 찾아
  * content/raw_content에서 금액을 파싱해 DB에 채워 넣는 스크립트.
+ * DB amount 컬럼은 원 단위 (예: 1,080만원 → 10800000)
  *
  * 실행: node scripts/fill-amounts.js
  * (tripstay-webapp 루트에서 실행, .env.local 필요)
@@ -29,7 +30,8 @@ const supabase = createClient(
 )
 
 /**
- * HTML에서 금액(만원 단위 정수)을 추출.
+ * HTML에서 금액을 파싱해 원 단위로 반환.
+ * 텍스트에서 "XX만원" → XX * 10000 변환.
  * birth-support 콘텐츠 기준으로 우선순위 순서로 패턴 매칭.
  */
 function extractAmount(content) {
@@ -49,20 +51,18 @@ function extractAmount(content) {
     /\b(\d{3,4}(?:,\d{3})?)만\s*원\b/,
   ]
 
-  const results = []
   for (const pattern of patterns) {
     const match = text.match(pattern)
     if (match) {
-      const num = parseInt(match[1].replace(/,/g, ''), 10)
+      const man = parseInt(match[1].replace(/,/g, ''), 10)
       // 10만원 ~ 5,000만원 범위만 유효
-      if (num >= 10 && num <= 5000) {
-        results.push(num)
-        break // 첫 번째 패턴 매칭 우선
+      if (man >= 10 && man <= 5000) {
+        return man * 10000 // 원 단위로 변환
       }
     }
   }
 
-  return results.length > 0 ? results[0] : null
+  return null
 }
 
 async function main() {
@@ -111,7 +111,7 @@ async function main() {
       console.error(`  ERROR ${record.sido} ${record.city_name}:`, error.message)
       skipped++
     } else {
-      console.log(`  OK    ${record.sido} ${record.city_name} → ${amount}만원`)
+      console.log(`  OK    ${record.sido} ${record.city_name} → ${(amount / 10000).toLocaleString('ko-KR')}만원 (${amount.toLocaleString('ko-KR')}원)`)
       updated++
     }
   }

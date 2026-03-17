@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import RegionSearchDropdown from '@/components/RegionSearchDropdown'
-import SearchBox from '@/components/SearchBox'
 import AdBanner from '@/components/AdBanner'
 import { getTopBirthSupport, type TopBirthSupportItem } from '@/lib/supabase'
 import { Card } from '@/components/ui/card'
@@ -26,8 +25,9 @@ const RANK_STYLES = [
 ]
 
 function formatAmount(amount: number): string {
-  // DB는 만원 단위 정수로 저장 (예: 440 → 440만원)
-  return amount.toLocaleString('ko-KR') + '만원'
+  // DB는 원 단위 정수로 저장 (예: 10800000 → 1,080만원)
+  const man = Math.round(amount / 10000)
+  return man.toLocaleString('ko-KR') + '만원'
 }
 
 export default async function HomePage() {
@@ -43,17 +43,11 @@ export default async function HomePage() {
       {/* ── 히어로 섹션 ─────────────────────────────── */}
       <section className="bg-gradient-to-b from-[#EEF0FF] to-white px-4 py-14 text-center">
         <h1 className="mb-3 text-4xl font-bold text-gray-900">
-          우리 아이를 위한 복지혜택, 한눈에 확인하세요
+          우리 아이 복지혜택 한눈에 확인
         </h1>
         <p className="mb-8 text-lg text-gray-600">전국 250개 시/군/구 복지정책 정보</p>
-        <div className="mx-auto max-w-2xl space-y-3">
+        <div className="mx-auto max-w-2xl">
           <RegionSearchDropdown />
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs text-gray-400">또는 지역명 직접 검색</span>
-            <div className="h-px flex-1 bg-gray-200" />
-          </div>
-          <SearchBox />
         </div>
       </section>
 

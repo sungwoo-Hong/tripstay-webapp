@@ -26,7 +26,7 @@ const SIDO_NAV = [
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -39,8 +39,8 @@ export default function Header() {
   }, [isOpen])
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
-      <div ref={menuRef} className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+    <header ref={menuRef} className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         {/* 로고 */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <span className="text-xl font-bold text-[#1f1bc4]">{SITE_NAME}</span>
