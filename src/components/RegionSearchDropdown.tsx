@@ -64,7 +64,7 @@ export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropd
         onChange={(e) => handleSidoChange(e.target.value)}
         className={selectClass}
       >
-        <option value="">시/도 선택</option>
+        <option value="">시/도</option>
         {SIDO_LIST.map((s) => (
           <option key={s} value={s}>{s}</option>
         ))}
@@ -77,7 +77,7 @@ export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropd
         disabled={!sido}
         className={selectClass}
       >
-        <option value="">시/군/구 선택</option>
+        <option value="">시/군/구</option>
         {cities.map((c) => (
           <option key={c} value={c}>{c}</option>
         ))}
@@ -90,7 +90,7 @@ export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropd
           onChange={(e) => setPolicy(e.target.value)}
           className={selectClass}
         >
-          <option value="">혜택 항목 선택</option>
+          <option value="">항목</option>
           {SEARCH_POLICIES.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}

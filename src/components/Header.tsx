@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { SITE_NAME } from '@/lib/constants'
+import { SITE_NAME, POLICIES } from '@/lib/constants'
 
 const SIDO_NAV = [
   { label: '서울', full: '서울특별시' },
@@ -75,7 +75,7 @@ export default function Header() {
       {/* 모바일 드로어 */}
       {isOpen && (
         <div className="absolute left-0 right-0 top-14 z-40 overflow-y-auto bg-white px-4 py-6 shadow-lg sm:hidden">
-          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">지역별</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">지역별</p>
           <div className="grid grid-cols-3 gap-2">
             {SIDO_NAV.map((item) => (
               <Link
@@ -85,6 +85,20 @@ export default function Header() {
                 className="flex items-center justify-center rounded-xl border border-gray-100 px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
               >
                 {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <p className="mb-3 mt-6 text-xs font-bold uppercase tracking-wider text-gray-400">정책별</p>
+          <div className="grid grid-cols-3 gap-2">
+            {POLICIES.map((policy) => (
+              <Link
+                key={policy.id}
+                href={`/policy/${policy.id}`}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-center rounded-xl border border-gray-100 px-2 py-2 text-center text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+              >
+                {policy.name}
               </Link>
             ))}
           </div>
