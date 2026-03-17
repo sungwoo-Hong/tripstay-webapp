@@ -39,3 +39,29 @@ export type Region = {
   sido: string
   code: string
 }
+
+export type RawWelfareItem = {
+  id: string
+  serv_id: string
+  sido: string
+  sgg_nm: string | null
+  serv_nm: string | null
+  serv_dgst: string | null
+  life_nm: string | null
+  intrs_thema_nm: string | null
+  sprt_cyc_nm: string | null
+  srv_pvsn_nm: string | null
+  aply_mtd_nm: string | null
+  serv_dtl_link: string | null
+  last_mod_ymd: string | null
+  sprt_trgt_cn: string | null
+  slct_crit_cn: string | null
+  alw_serv_cn: string | null
+  aply_mtd_cn: string | null
+  dept_name: string | null
+  phone: string | null
+  baslaw_nm: string | null
+  basfm_link: string | null
+  enfc_bgng_ymd: string | null
+  detail_fetched: boolean | null
+}

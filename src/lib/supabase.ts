@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { createBrowserClient } from '@supabase/ssr'
-import type { Benefit, NationalBenefit } from '@/types'
+import type { Benefit, NationalBenefit, RawWelfareItem } from '@/types'
 
 // ── 클라이언트 컴포넌트용 (브라우저) ─────────────────────────
 export function createBrowserSupabaseClient() {
@@ -188,4 +188,108 @@ export async function getTopBirthSupport(limit = 5): Promise<TopBirthSupportItem
 
   if (error) throw error
   return (data ?? []) as TopBirthSupportItem[]
+}
+
+// ── raw_welfare_api 헬퍼 (새 아키텍처) ──────────────────────
+
+/** 시군구별 복지 목록 (city page용) */
+export async function getRawWelfareItemsByCity(
+  sido: string,
+  sggNm: string,
+): Promise<RawWelfareItem[]> {
+  const { data, error } = await supabaseServer
+    .from('raw_welfare_api')
+    .select('serv_id, sido, sgg_nm, serv_nm, serv_dgst, life_nm, intrs_thema_nm, sprt_cyc_nm, srv_pvsn_nm, aply_mtd_nm, detail_fetched')
+    .eq('sido', sido)
+    .eq('sgg_nm', sggNm)
+    .order('serv_nm', { ascending: true })
+
+  if (error) return []
+  return (data ?? []) as RawWelfareItem[]
+}
+
+/** 개별 복지 항목 상세 (welfare detail page용) */
+export async function getRawWelfareItem(servId: string): Promise<RawWelfareItem | null> {
+  const { data, error } = await supabaseServer
+    .from('raw_welfare_api')
+    .select('*')
+    .eq('serv_id', servId)
+    .single()
+
+  if (error) return null
+  return data as RawWelfareItem
+}
+
+/** generateStaticParams용: city page (raw_welfare_api 기준) */
+export async function getAllRawCityParams(): Promise<
+  Array<{ sido: string; sgg_nm: string }>
+> {
+  const allData: Array<{ sido: string; sgg_nm: string }> = []
+  const pageSize = 1000
+  let page = 0
+
+  while (true) {
+    const { data, error } = await supabaseServer
+      .from('raw_welfare_api')
+      .select('sido, sgg_nm')
+      .not('sgg_nm', 'is', null)
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+
+    if (error || !data || data.length === 0) break
+    allData.push(...data)
+    if (data.length < pageSize) break
+    page++
+  }
+
+  // 중복 제거
+  const seen = new Set<string>()
+  return allData.filter((item) => {
+    const key = `${item.sido}__${item.sgg_nm}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+/** generateStaticParams용: welfare detail page */
+export async function getAllRawServIds(): Promise<string[]> {
+  const allIds: string[] = []
+  const pageSize = 1000
+  let page = 0
+
+  while (true) {
+    const { data, error } = await supabaseServer
+      .from('raw_welfare_api')
+      .select('serv_id')
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+
+    if (error || !data || data.length === 0) break
+    allIds.push(...data.map((d) => d.serv_id))
+    if (data.length < pageSize) break
+    page++
+  }
+
+  return allIds
+}
+
+/** region page용: 시도별 시군구 목록 (raw_welfare_api 기준) */
+export async function getRawCitiesBySido(sido: string): Promise<string[]> {
+  const { data, error } = await supabaseServer
+    .from('raw_welfare_api')
+    .select('sgg_nm')
+    .eq('sido', sido)
+    .not('sgg_nm', 'is', null)
+    .order('sgg_nm', { ascending: true })
+
+  if (error) return []
+
+  const seen = new Set<string>()
+  const cities: string[] = []
+  for (const row of data ?? []) {
+    if (row.sgg_nm && !seen.has(row.sgg_nm)) {
+      seen.add(row.sgg_nm)
+      cities.push(row.sgg_nm)
+    }
+  }
+  return cities
 }

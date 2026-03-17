@@ -2,24 +2,23 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import Breadcrumb from '@/components/Breadcrumb'
-import { getAllBenefitParams, getBenefitsBySido } from '@/lib/supabase'
+import { SIDO_LIST } from '@/lib/constants'
+import { getRawCitiesBySido } from '@/lib/supabase'
 
 interface PageProps {
   params: Promise<{ sido: string }>
 }
 
 export async function generateStaticParams() {
-  const params = await getAllBenefitParams()
-  const uniqueSido = [...new Set(params.map((p) => p.sido))]
-  return uniqueSido.map((sido) => ({ sido }))
+  return SIDO_LIST.map((sido) => ({ sido: encodeURIComponent(sido) }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { sido } = await params
   const sidoDecoded = decodeURIComponent(sido)
   return {
-    title: `${sidoDecoded} 복지혜택 지역별 정보 | 복지다모아`,
-    description: `${sidoDecoded} 시/군/구별 출산지원금, 부모급여, 아동수당 등 복지혜택을 확인하세요.`,
+    title: `${sidoDecoded} 복지서비스 지역별 정보 | 복지다모아`,
+    description: `${sidoDecoded} 시/군/구별 출산, 보육, 주거, 청년 등 모든 복지서비스를 확인하세요.`,
   }
 }
 
@@ -27,8 +26,7 @@ export default async function RegionPage({ params }: PageProps) {
   const { sido } = await params
   const sidoDecoded = decodeURIComponent(sido)
 
-  const benefits = await getBenefitsBySido(sidoDecoded)
-  const cities = [...new Set(benefits.map((b) => b.city_name))]
+  const cities = await getRawCitiesBySido(sidoDecoded)
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -36,10 +34,10 @@ export default async function RegionPage({ params }: PageProps) {
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          {sidoDecoded} 복지혜택
+          {sidoDecoded} 복지서비스
         </h1>
         <p className="mt-2 text-gray-500">
-          시/군/구를 선택하면 해당 지역의 복지혜택을 확인할 수 있습니다
+          시/군/구를 선택하면 해당 지역의 모든 복지서비스를 확인할 수 있습니다
         </p>
       </div>
 

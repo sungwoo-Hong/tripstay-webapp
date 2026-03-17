@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
-import { POLICIES, SIDO_LIST, SITE_URL } from '@/lib/constants'
-import { getAllBenefitParams } from '@/lib/supabase'
+import { SIDO_LIST, SITE_URL } from '@/lib/constants'
+import { getAllRawCityParams, getAllRawServIds } from '@/lib/supabase'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
@@ -8,12 +8,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 정적 페이지
   const staticPages: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: now, changeFrequency: 'daily', priority: 1 },
-    ...POLICIES.map((p) => ({
-      url: `${SITE_URL}/policy/${p.id}`,
-      lastModified: now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    })),
     ...SIDO_LIST.map((sido) => ({
       url: `${SITE_URL}/region/${encodeURIComponent(sido)}`,
       lastModified: now,
@@ -22,14 +16,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ]
 
-  // Supabase에서 전체 상세 페이지 URL 조회 (테이블 비어있으면 [] 반환)
-  const benefitParams = await getAllBenefitParams()
-  const benefitPages: MetadataRoute.Sitemap = benefitParams.map(({ sido, city_name, policy_id }) => ({
-    url: `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(city_name)}/${policy_id}`,
+  // 시군구 페이지
+  const cityParams = await getAllRawCityParams()
+  const cityPages: MetadataRoute.Sitemap = cityParams.map(({ sido, sgg_nm }) => ({
+    url: `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(sgg_nm)}`,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  // 개별 복지 서비스 페이지
+  const servIds = await getAllRawServIds()
+  const welfarePages: MetadataRoute.Sitemap = servIds.map((servId) => ({
+    url: `${SITE_URL}/welfare/${servId}`,
     lastModified: now,
     changeFrequency: 'monthly' as const,
     priority: 0.6,
   }))
 
-  return [...staticPages, ...benefitPages]
+  return [...staticPages, ...cityPages, ...welfarePages]
 }

@@ -1,38 +1,59 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Breadcrumb from '@/components/Breadcrumb'
-import { POLICIES } from '@/lib/constants'
-import { getAllBenefitParams, getBenefitsByCity } from '@/lib/supabase'
+import { getAllRawCityParams, getRawWelfareItemsByCity } from '@/lib/supabase'
 
 interface PageProps {
   params: Promise<{ sido: string; city: string }>
 }
 
 export async function generateStaticParams() {
-  const params = await getAllBenefitParams()
-  const unique = Array.from(
-    new Map(
-      params.map((p) => [`${p.sido}-${p.city_name}`, { sido: p.sido, city: p.city_name }]),
-    ).values(),
-  )
-  return unique.map(({ sido, city }) => ({ sido, city }))
+  const params = await getAllRawCityParams()
+  return params.map(({ sido, sgg_nm }) => ({
+    sido: encodeURIComponent(sido),
+    city: encodeURIComponent(sgg_nm),
+  }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { city } = await params
+  const { sido, city } = await params
+  const sidoDecoded = decodeURIComponent(sido)
   const cityDecoded = decodeURIComponent(city)
   return {
     title: `${cityDecoded} 복지혜택 총정리 | 복지다모아`,
-    description: `${cityDecoded}의 출산지원금, 부모급여, 아동수당 등 복지혜택을 한눈에 확인하세요.`,
+    description: `${cityDecoded}의 출산, 보육, 주거, 청년 등 모든 지역 복지서비스를 한눈에 확인하세요.`,
   }
 }
 
-export default async function CityBenefitsPage({ params }: PageProps) {
+function TagBadge({ value }: { value: string | null }) {
+  if (!value) return null
+  let tags: string[] = []
+  try {
+    const parsed = JSON.parse(value)
+    tags = Array.isArray(parsed) ? parsed.slice(0, 2) : [value]
+  } catch {
+    tags = value.split(/[,，]/).map((t) => t.trim()).filter(Boolean).slice(0, 2)
+  }
+  return (
+    <>
+      {tags.map((tag) => (
+        <span
+          key={tag}
+          className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-[#1f1bc4]"
+        >
+          {tag}
+        </span>
+      ))}
+    </>
+  )
+}
+
+export default async function CityWelfarePage({ params }: PageProps) {
   const { sido, city } = await params
   const sidoDecoded = decodeURIComponent(sido)
   const cityDecoded = decodeURIComponent(city)
 
-  const benefits = await getBenefitsByCity(sidoDecoded, cityDecoded)
+  const items = await getRawWelfareItemsByCity(sidoDecoded, cityDecoded)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -46,16 +67,16 @@ export default async function CityBenefitsPage({ params }: PageProps) {
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          {cityDecoded} 복지혜택
+          {cityDecoded} 복지서비스
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          {sidoDecoded} · {benefits.length}개 정책
+          {sidoDecoded} · {items.length}개 서비스
         </p>
       </div>
 
-      {benefits.length === 0 ? (
+      {items.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 text-center text-gray-500">
-          <p>아직 등록된 정책 정보가 없습니다.</p>
+          <p>등록된 복지서비스 정보가 없습니다.</p>
           <Link
             href="/"
             className="rounded-lg bg-[#1f1bc4] px-4 py-2 text-sm font-medium text-white hover:bg-[#1a17a0]"
@@ -64,25 +85,32 @@ export default async function CityBenefitsPage({ params }: PageProps) {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {benefits.map((benefit) => {
-            const policyObj = POLICIES.find((p) => p.id === benefit.policy_id)
-            return (
-              <Link
-                key={`${benefit.policy_id}-${benefit.slug}`}
-                href={`/${sido}/${city}/${benefit.policy_id}`}
-                className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-[#1f1bc4] hover:shadow-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{policyObj?.icon ?? '📋'}</span>
-                  <span className="text-sm font-semibold text-gray-800">
-                    {benefit.policy_name}
+        <div className="flex flex-col gap-3">
+          {items.map((item) => (
+            <Link
+              key={item.serv_id}
+              href={`/welfare/${item.serv_id}`}
+              className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-[#1f1bc4] hover:shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-semibold text-gray-900 leading-snug">
+                  {item.serv_nm}
+                </p>
+                {item.srv_pvsn_nm && (
+                  <span className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] text-gray-500">
+                    {item.srv_pvsn_nm}
                   </span>
-                </div>
-                <p className="line-clamp-2 text-xs text-gray-600">{benefit.title}</p>
-              </Link>
-            )
-          })}
+                )}
+              </div>
+              {item.serv_dgst && (
+                <p className="line-clamp-2 text-xs text-gray-500">{item.serv_dgst}</p>
+              )}
+              <div className="flex flex-wrap gap-1">
+                <TagBadge value={item.life_nm} />
+                <TagBadge value={item.intrs_thema_nm} />
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </div>
