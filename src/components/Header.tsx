@@ -54,7 +54,7 @@ export default function Header() {
           {SIDO_NAV.map((item) => (
             <Link
               key={item.full}
-              href={`/region/${item.full}`}
+              href={`/region/${encodeURIComponent(item.full)}`}
               className="shrink-0 rounded px-1.5 py-1 text-gray-600 transition-colors hover:bg-blue-50 hover:text-[#1f1bc4]"
             >
               {item.label}

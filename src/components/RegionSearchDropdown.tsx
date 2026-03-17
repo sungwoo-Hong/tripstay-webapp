@@ -26,7 +26,11 @@ const REGION_DATA: Record<string, string[]> = {
 
 const SIDO_LIST = Object.keys(REGION_DATA)
 
-export default function RegionSearchDropdown() {
+interface RegionSearchDropdownProps {
+  targetPolicy?: string
+}
+
+export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropdownProps = {}) {
   const [sido, setSido] = useState('')
   const [city, setCity] = useState('')
   const [policy, setPolicy] = useState('')
@@ -41,8 +45,12 @@ export default function RegionSearchDropdown() {
 
   function handleSearch() {
     if (!sido || !city) return
-    const policyId = policy || 'birth-support'
-    router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policyId}`)
+    if (targetPolicy) {
+      router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${targetPolicy}`)
+    } else {
+      const policyId = policy || 'birth-support'
+      router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policyId}`)
+    }
   }
 
   const selectClass =
@@ -75,17 +83,19 @@ export default function RegionSearchDropdown() {
         ))}
       </select>
 
-      {/* 혜택 항목 드롭다운 */}
-      <select
-        value={policy}
-        onChange={(e) => setPolicy(e.target.value)}
-        className={selectClass}
-      >
-        <option value="">혜택 항목 선택</option>
-        {SEARCH_POLICIES.map((p) => (
-          <option key={p.id} value={p.id}>{p.name}</option>
-        ))}
-      </select>
+      {/* 혜택 항목 드롭다운 — targetPolicy 고정 시 숨김 */}
+      {!targetPolicy && (
+        <select
+          value={policy}
+          onChange={(e) => setPolicy(e.target.value)}
+          className={selectClass}
+        >
+          <option value="">혜택 항목 선택</option>
+          {SEARCH_POLICIES.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      )}
 
       {/* 검색 버튼 */}
       <button

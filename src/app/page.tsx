@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import RegionSearchDropdown from '@/components/RegionSearchDropdown'
+import SearchBox from '@/components/SearchBox'
 import AdBanner from '@/components/AdBanner'
 import { getTopBirthSupport, type TopBirthSupportItem } from '@/lib/supabase'
 import { Card } from '@/components/ui/card'
@@ -45,8 +46,14 @@ export default async function HomePage() {
           우리 아이를 위한 복지혜택, 한눈에 확인하세요
         </h1>
         <p className="mb-8 text-lg text-gray-600">전국 250개 시/군/구 복지정책 정보</p>
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-2xl space-y-3">
           <RegionSearchDropdown />
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-xs text-gray-400">또는 지역명 직접 검색</span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+          <SearchBox />
         </div>
       </section>
 

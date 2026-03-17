@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { POLICIES } from '@/lib/constants'
-import { getBenefitsByPolicy, getNationalBenefits } from '@/lib/supabase'
+import { getNationalBenefits } from '@/lib/supabase'
 import Breadcrumb from '@/components/Breadcrumb'
 import NationalBenefitsTable from '@/components/NationalBenefitsTable'
 import AdBanner from '@/components/AdBanner'
+import RegionSearchDropdown from '@/components/RegionSearchDropdown'
 
 interface PageProps {
   params: Promise<{ policyId: string }>
@@ -30,10 +31,7 @@ export default async function PolicyListPage({ params }: PageProps) {
   const policy = POLICIES.find((p) => p.id === policyId)
   if (!policy) notFound()
 
-  const [{ data: benefits }, nationalBenefits] = await Promise.all([
-    getBenefitsByPolicy(policyId),
-    getNationalBenefits(policyId),
-  ])
+  const nationalBenefits = await getNationalBenefits(policyId)
 
   const otherPolicies = POLICIES.filter((p) => p.id !== policyId)
 
@@ -84,36 +82,14 @@ export default async function PolicyListPage({ params }: PageProps) {
       {/* 광고 */}
       <AdBanner className="mb-8" />
 
-      {/* 지역별 카드 */}
-      <section>
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-800">지역별 {policy.name} 보기</h2>
-          <span className="text-sm text-gray-400">{benefits.length}개 지역</span>
-        </div>
-
-        {benefits.length === 0 ? (
-          <p className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500">
-            콘텐츠가 준비 중입니다. 곧 업데이트될 예정입니다.
+      {/* 우리 지역 혜택 확인 */}
+      <section className="mb-8">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+          <p className="mb-4 text-center text-base font-bold text-gray-800">
+            우리 지역 <span className="text-[#1f1bc4]">{policy.name}</span> 확인해보세요
           </p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {benefits.map((region) => (
-              <Link
-                key={`${region.sido}-${region.city_name}`}
-                href={`/${encodeURIComponent(region.sido)}/${encodeURIComponent(region.city_name)}/${policyId}`}
-                className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
-              >
-                <p className="font-bold text-gray-900 group-hover:text-[#1f1bc4]">
-                  {region.city_name}
-                </p>
-                <p className="mt-0.5 text-xs text-gray-500">{region.sido}</p>
-                <p className="mt-2 text-xs text-[#1f1bc4] opacity-0 transition-opacity group-hover:opacity-100">
-                  자세히 보기 →
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
+          <RegionSearchDropdown targetPolicy={policyId} />
+        </div>
       </section>
 
       {/* 다른 정책 바로가기 */}

@@ -54,22 +54,14 @@ export async function getBenefit(
 
 export async function getBenefitsByPolicy(
   policyId: string,
-  page = 1,
-  pageSize = 50,
-): Promise<{ data: Benefit[]; count: number }> {
-  const from = (page - 1) * pageSize
-  const to   = from + pageSize - 1
-
-  const { data, error, count } = await supabaseServer
+): Promise<{ count: number }> {
+  const { count, error } = await supabaseServer
     .from('benefits')
-    .select('sido, city_name, policy_id, policy_name, title, slug', { count: 'exact' })
+    .select('*', { count: 'exact', head: true })
     .eq('policy_id', policyId)
-    .order('sido',      { ascending: true })
-    .order('city_name', { ascending: true })
-    .range(from, to)
 
-  if (error) return { data: [], count: 0 }
-  return { data: (data ?? []) as Benefit[], count: count ?? 0 }
+  if (error) return { count: 0 }
+  return { count: count ?? 0 }
 }
 
 export async function getBenefitsBySido(sido: string): Promise<Benefit[]> {
@@ -159,6 +151,30 @@ export async function getCityPolicies(sido: string, cityName: string): Promise<s
 
   if (error || !data) return []
   return [...new Set(data.map((d) => d.policy_id))]
+}
+
+export async function searchCities(
+  query: string,
+): Promise<Array<{ sido: string; city_name: string }>> {
+  if (!query.trim()) return []
+
+  const { data, error } = await supabaseServer
+    .from('benefits')
+    .select('sido, city_name')
+    .ilike('city_name', `%${query.trim()}%`)
+    .order('sido', { ascending: true })
+    .order('city_name', { ascending: true })
+
+  if (error) return []
+
+  // 중복 제거 (policy_id별로 여러 행이 있으므로)
+  const seen = new Set<string>()
+  return (data ?? []).filter((item) => {
+    const key = `${item.sido}__${item.city_name}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 export async function getTopBirthSupport(limit = 5): Promise<TopBirthSupportItem[]> {

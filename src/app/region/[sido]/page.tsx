@@ -58,7 +58,7 @@ export default async function RegionPage({ params }: PageProps) {
           {cities.map((city) => (
             <Link
               key={city}
-              href={`/${sido}/${encodeURIComponent(city)}`}
+              href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(city)}`}
               className="group rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
             >
               <p className="font-bold text-gray-900 group-hover:text-[#1f1bc4]">{city}</p>
