@@ -280,7 +280,7 @@ export async function getWelfareByTheme(
 ): Promise<RawWelfareItem[]> {
   let query = supabaseServer
     .from('raw_welfare_api')
-    .select('serv_id, sido, sgg_nm, serv_nm, serv_dgst, intrs_thema_nm')
+    .select('serv_id, serv_nm, serv_dgst, intrs_thema_nm')
     .order('serv_nm', { ascending: true })
     .range(offset, offset + limit - 1)
 
@@ -291,6 +291,27 @@ export async function getWelfareByTheme(
   const { data, error } = await query
   if (error) return []
   return (data ?? []) as RawWelfareItem[]
+}
+
+/** region page용: 시도별 시군구 목록 (benefits 테이블 기준 — 안정적) */
+export async function getCitiesBySido(sido: string): Promise<string[]> {
+  const { data, error } = await supabaseServer
+    .from('benefits')
+    .select('city_name')
+    .eq('sido', sido)
+    .order('city_name', { ascending: true })
+
+  if (error) return []
+
+  const seen = new Set<string>()
+  const cities: string[] = []
+  for (const row of data ?? []) {
+    if (row.city_name && !seen.has(row.city_name)) {
+      seen.add(row.city_name)
+      cities.push(row.city_name)
+    }
+  }
+  return cities
 }
 
 /** region page용: 시도별 시군구 목록 (raw_welfare_api 기준) */

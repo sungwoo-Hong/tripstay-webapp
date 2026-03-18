@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import Breadcrumb from '@/components/Breadcrumb'
 import { SIDO_LIST } from '@/lib/constants'
-import { getRawCitiesBySido } from '@/lib/supabase'
+import { getCitiesBySido } from '@/lib/supabase'
 
 interface PageProps {
   params: Promise<{ sido: string }>
@@ -26,7 +26,7 @@ export default async function RegionPage({ params }: PageProps) {
   const { sido } = await params
   const sidoDecoded = decodeURIComponent(sido)
 
-  const cities = await getRawCitiesBySido(sidoDecoded)
+  const cities = await getCitiesBySido(sidoDecoded)
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">

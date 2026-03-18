@@ -8,6 +8,17 @@ import type { RawWelfareItem } from '@/types'
 
 const PAGE_SIZE = 12
 
+function parseThemeLabel(value: string | null): string {
+  if (!value) return ''
+  try {
+    const parsed = JSON.parse(value)
+    if (Array.isArray(parsed)) return parsed[0] ?? ''
+  } catch {
+    // not JSON — treat as plain string (comma-separated or single value)
+  }
+  return value.split(/[,，]/)[0].trim()
+}
+
 export default function PolicyTabs() {
   const [activeTheme, setActiveTheme] = useState<WelfareTheme>('전체')
   const [items, setItems] = useState<RawWelfareItem[]>([])
@@ -20,7 +31,7 @@ export default function PolicyTabs() {
     const supabase = createBrowserSupabaseClient()
     let query = supabase
       .from('raw_welfare_api')
-      .select('serv_id, sido, sgg_nm, serv_nm, serv_dgst, intrs_thema_nm')
+      .select('serv_id, serv_nm, serv_dgst, intrs_thema_nm')
       .order('serv_nm', { ascending: true })
       .range(currentOffset, currentOffset + PAGE_SIZE - 1)
 
@@ -100,9 +111,9 @@ export default function PolicyTabs() {
               {item.serv_dgst && (
                 <p className="mt-2 text-xs text-gray-500 line-clamp-3">{item.serv_dgst}</p>
               )}
-              {item.intrs_thema_nm && (
+              {parseThemeLabel(item.intrs_thema_nm) && (
                 <span className="mt-auto pt-2 text-xs font-medium text-[#1f1bc4]">
-                  {item.intrs_thema_nm}
+                  {parseThemeLabel(item.intrs_thema_nm)}
                 </span>
               )}
             </Link>
