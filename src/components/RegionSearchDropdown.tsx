@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { WELFARE_THEMES, REGION_DATA, type WelfareTheme } from '@/lib/constants'
+import { REGION_DATA } from '@/lib/constants'
 
 const SIDO_LIST = Object.keys(REGION_DATA)
 
@@ -13,7 +13,6 @@ interface RegionSearchDropdownProps {
 export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropdownProps = {}) {
   const [sido, setSido] = useState('')
   const [city, setCity] = useState('')
-  const [theme, setTheme] = useState<WelfareTheme>('전체')
   const router = useRouter()
 
   const cities = sido ? (REGION_DATA[sido] ?? []) : []
@@ -28,8 +27,7 @@ export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropd
     if (targetPolicy) {
       router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${targetPolicy}`)
     } else {
-      const params = theme !== '전체' ? `?theme=${encodeURIComponent(theme)}` : ''
-      router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}${params}`)
+      router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}`)
     }
   }
 
@@ -62,19 +60,6 @@ export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropd
           <option key={c} value={c}>{c}</option>
         ))}
       </select>
-
-      {/* 테마 드롭다운 — targetPolicy 고정 시 숨김 */}
-      {!targetPolicy && (
-        <select
-          value={theme}
-          onChange={(e) => setTheme(e.target.value as WelfareTheme)}
-          className={selectClass}
-        >
-          {WELFARE_THEMES.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-      )}
 
       {/* 검색 버튼 */}
       <button

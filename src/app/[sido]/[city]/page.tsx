@@ -4,10 +4,59 @@ import { cache } from 'react'
 import Breadcrumb from '@/components/Breadcrumb'
 import { REGION_DATA, POLICIES } from '@/lib/constants'
 import { getRawWelfareItemsByCity, getBenefitsByCity } from '@/lib/supabase'
+import type { RawWelfareItem } from '@/types'
 
 interface PageProps {
   params: Promise<{ sido: string; city: string }>
   searchParams: Promise<{ theme?: string }>
+}
+
+// 테마 → 아이콘 매핑
+const THEME_ICON_MAP: Record<string, string> = {
+  '서민금융': '💰',
+  '임신·출산': '🤱',
+  '입양·위탁': '👨‍👩‍👧',
+  '교육': '📚',
+  '일자리': '💼',
+  '안전·위기': '🛡️',
+  '신체건강': '🏥',
+  '보호·돌봄': '🤝',
+  '주거': '🏠',
+  '생활지원': '✨',
+  '노년': '👴',
+  '장애': '♿',
+  '청년': '🧑',
+  '여성': '👩',
+  '다문화': '🌏',
+  '임신': '🤰',
+  '출산': '🤱',
+  '보육': '🏫',
+  '아동': '🧒',
+}
+
+function getThemeIcon(intrs_thema_nm: string | null): string {
+  if (!intrs_thema_nm) return '📋'
+  let themes: string[] = []
+  try {
+    const parsed = JSON.parse(intrs_thema_nm)
+    themes = Array.isArray(parsed) ? parsed.map(String) : [String(parsed)]
+  } catch {
+    themes = intrs_thema_nm.split(/[,，]/).map((t) => t.trim()).filter(Boolean)
+  }
+  for (const theme of themes) {
+    for (const [key, icon] of Object.entries(THEME_ICON_MAP)) {
+      if (theme.includes(key)) return icon
+    }
+  }
+  return '📋'
+}
+
+function shortenSido(sido: string): string {
+  return sido
+    .replace('특별자치시', '')
+    .replace('특별자치도', '')
+    .replace('특별시', '')
+    .replace('광역시', '')
 }
 
 // React cache로 generateMetadata와 페이지 컴포넌트 간 DB 조회 공유
@@ -68,23 +117,25 @@ function matchesTheme(intrs_thema_nm: string | null | undefined, theme: string):
   }
 }
 
-function TagBadge({ value }: { value: string | null }) {
-  if (!value) return null
-  let tags: string[] = []
-  try {
-    const parsed = JSON.parse(value)
-    tags = Array.isArray(parsed) ? parsed.slice(0, 2) : [value]
-  } catch {
-    tags = value.split(/[,，]/).map((t) => t.trim()).filter(Boolean).slice(0, 2)
-  }
+function RawWelfareCard({ item, sidoShort }: { item: RawWelfareItem; sidoShort: string }) {
   return (
-    <>
-      {tags.map((tag) => (
-        <span key={tag} className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-[#1f1bc4]">
-          {tag}
+    <Link
+      href={`/welfare/${item.serv_id}`}
+      className="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
+    >
+      <span className="text-3xl">{getThemeIcon(item.intrs_thema_nm)}</span>
+      <p className="mt-2 line-clamp-2 text-xs font-bold text-gray-900 group-hover:text-[#1f1bc4]">
+        {item.serv_nm}
+      </p>
+      {item.srv_pvsn_nm && (
+        <span className="mt-1 text-[10px] text-gray-400">{item.srv_pvsn_nm}</span>
+      )}
+      {item.sgg_nm === null && (
+        <span className="mt-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-600">
+          {sidoShort} 공통
         </span>
-      ))}
-    </>
+      )}
+    </Link>
   )
 }
 
@@ -93,16 +144,21 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
   const { theme } = await searchParams
   const sidoDecoded = decodeURIComponent(sido)
   const cityDecoded = decodeURIComponent(city)
+  const sidoShort = shortenSido(sidoDecoded)
 
   const { allRawItems, uniquePolicies, isEmpty } = await fetchCityData(sidoDecoded, cityDecoded)
 
-  // 테마 필터 적용 (raw_welfare_api 항목만 필터링)
-  const rawItems =
+  // 테마 필터 적용
+  const filteredRawItems =
     theme && theme !== '전체'
       ? allRawItems.filter((item) => matchesTheme(item.intrs_thema_nm, theme))
       : allRawItems
 
-  const totalCount = rawItems.length + (theme ? 0 : uniquePolicies.length)
+  // 시군구 전용 / 시도 공통 분리
+  const cityRawItems = filteredRawItems.filter((item) => item.sgg_nm !== null)
+  const sidoRawItems = filteredRawItems.filter((item) => item.sgg_nm === null)
+
+  const totalCount = filteredRawItems.length + (theme ? 0 : uniquePolicies.length)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -144,10 +200,10 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
         </div>
       )}
 
-      {/* ── 지역 지원금 (benefits 테이블) ── */}
+      {/* ── 출산 관련 지원금 (benefits 테이블) ── */}
       {!theme && uniquePolicies.length > 0 && (
         <section className="mb-8">
-          <h2 className="mb-3 text-base font-bold text-gray-800">지역 지원금</h2>
+          <h2 className="mb-3 text-base font-bold text-gray-800">{cityDecoded} 출산 관련 지원금</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {uniquePolicies.map((b) => {
               const meta = POLICIES.find((p) => p.id === b.policy_id)
@@ -168,51 +224,32 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
         </section>
       )}
 
-      {/* ── 복지서비스 (raw_welfare_api) ── */}
-      {rawItems.length > 0 && (
-        <section>
-          {!theme && uniquePolicies.length > 0 && (
-            <h2 className="mb-3 text-base font-bold text-gray-800">복지서비스</h2>
-          )}
-          <div className="flex flex-col gap-3">
-            {rawItems.map((item) => (
-              <Link
-                key={item.serv_id}
-                href={`/welfare/${item.serv_id}`}
-                className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-[#1f1bc4] hover:shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold text-gray-900 leading-snug">
-                    {item.serv_nm}
-                  </p>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    {item.sgg_nm === null && (
-                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] text-blue-700">
-                        {sidoDecoded.replace('특별자치시', '').replace('특별자치도', '').replace('특별시', '').replace('광역시', '')} 공통
-                      </span>
-                    )}
-                    {item.srv_pvsn_nm && (
-                      <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] text-gray-500">
-                        {item.srv_pvsn_nm}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {item.serv_dgst && (
-                  <p className="line-clamp-2 text-xs text-gray-500">{item.serv_dgst}</p>
-                )}
-                <div className="flex flex-wrap gap-1">
-                  <TagBadge value={item.life_nm} />
-                  <TagBadge value={item.intrs_thema_nm} />
-                </div>
-              </Link>
+      {/* ── 시군구 전용 복지서비스 ── */}
+      {cityRawItems.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-base font-bold text-gray-800">{cityDecoded} 복지서비스</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {cityRawItems.map((item) => (
+              <RawWelfareCard key={item.serv_id} item={item} sidoShort={sidoShort} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── 시도 공통 복지서비스 ── */}
+      {sidoRawItems.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-base font-bold text-gray-800">{sidoShort} 공통 복지서비스</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {sidoRawItems.map((item) => (
+              <RawWelfareCard key={item.serv_id} item={item} sidoShort={sidoShort} />
             ))}
           </div>
         </section>
       )}
 
       {/* 테마 필터 결과 없음 */}
-      {allRawItems.length > 0 && rawItems.length === 0 && theme && theme !== '전체' && (
+      {allRawItems.length > 0 && filteredRawItems.length === 0 && theme && theme !== '전체' && (
         <div className="flex flex-col items-center gap-4 py-20 text-center text-gray-500">
           <p>해당 테마의 서비스가 없습니다.</p>
           <Link
