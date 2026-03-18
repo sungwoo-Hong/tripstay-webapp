@@ -7,8 +7,8 @@ interface PageProps {
   params: Promise<{ sido: string }>
 }
 
-export async function generateStaticParams() {
-  return SIDO_LIST.map((sido) => ({ sido: encodeURIComponent(sido) }))
+export function generateStaticParams() {
+  return SIDO_LIST.map((sido) => ({ sido }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
