@@ -34,14 +34,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // Supabase에 데이터 없으면 기본 메타데이터
   if (!benefit) {
     const policyObj = POLICIES.find((p) => p.id === policy)
-    const title     = `${cityDecoded} ${policyObj?.name ?? policy} 신청방법 및 지원금액`
+    const title     = `2026년 ${cityDecoded} ${policyObj?.name ?? policy} 신청방법 및 지원금액`
     return { title }
   }
 
   const url = `${SITE_URL}/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policy}`
+  const year = new Date().getFullYear()
+  const titleWithYear = benefit.title.match(/^\d{4}/) ? benefit.title : `${year}년 ${benefit.title}`
 
   return {
-    title:       benefit.title,
+    title:       titleWithYear,
     description: benefit.meta_description ?? undefined,
     keywords:    [...(benefit.tags ?? []), sidoDecoded, cityDecoded],
     openGraph: {
@@ -54,17 +56,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-/** JSON-LD 구조화 데이터 */
+/** JSON-LD 구조화 데이터 (Article + BreadcrumbList) */
 function JsonLd({
   title,
   description,
   url,
+  sido,
+  city,
+  policyName,
 }: {
   title: string
   description: string
   url: string
+  sido: string
+  city: string
+  policyName: string
 }) {
-  const data = {
+  const article = {
     '@context':  'https://schema.org',
     '@type':     'Article',
     headline:    title,
@@ -74,11 +82,21 @@ function JsonLd({
     publisher: { '@type': 'Organization', name: '복지다모아' },
     dateModified: new Date().toISOString().split('T')[0],
   }
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '홈', item: 'https://www.tripstay.co.kr' },
+      { '@type': 'ListItem', position: 2, name: sido, item: `https://www.tripstay.co.kr/region/${encodeURIComponent(sido)}` },
+      { '@type': 'ListItem', position: 3, name: city, item: `https://www.tripstay.co.kr/${encodeURIComponent(sido)}/${encodeURIComponent(city)}` },
+      { '@type': 'ListItem', position: 4, name: policyName, item: url },
+    ],
+  }
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(article) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+    </>
   )
 }
 
@@ -147,6 +165,9 @@ export default async function BenefitDetailPage({ params }: PageProps) {
         title={benefit.title}
         description={benefit.meta_description ?? benefit.title}
         url={pageUrl}
+        sido={sidoDecoded}
+        city={cityDecoded}
+        policyName={benefit.policy_name}
       />
 
       <article className="mx-auto max-w-3xl px-4 py-8">

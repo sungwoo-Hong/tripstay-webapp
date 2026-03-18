@@ -19,7 +19,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const city = item.sgg_nm ?? item.sido
   const localTitle = `${city} ${item.serv_nm}`
-  const title = `${localTitle} | 복지다모아`
+  const year = new Date().getFullYear()
+  const title = `${year}년 ${localTitle} 신청방법 및 지원대상 | 복지다모아`
   const description = item.serv_dgst ?? `${city} ${item.serv_nm} 지원 대상, 신청 방법 안내`
   const url = `${SITE_URL}/welfare/${servId}`
 
@@ -78,7 +79,7 @@ export default async function WelfareDetailPage({ params }: PageProps) {
   const cityEncoded = item.sgg_nm ? encodeURIComponent(item.sgg_nm) : sidoEncoded
   const pageUrl = `${SITE_URL}/welfare/${servId}`
 
-  const jsonLd = {
+  const jsonLdService = {
     '@context': 'https://schema.org',
     '@type': 'GovernmentService',
     name: item.serv_nm,
@@ -91,12 +92,47 @@ export default async function WelfareDetailPage({ params }: PageProps) {
     areaServed: city,
   }
 
+  const breadcrumbItems: Array<{ '@type': string; position: number; name: string; item?: string }> = [
+    { '@type': 'ListItem', position: 1, name: '홈', item: 'https://www.tripstay.co.kr' },
+    { '@type': 'ListItem', position: 2, name: item.sido, item: `https://www.tripstay.co.kr/region/${sidoEncoded}` },
+  ]
+  if (item.sgg_nm) {
+    breadcrumbItems.push({ '@type': 'ListItem', position: 3, name: item.sgg_nm, item: `https://www.tripstay.co.kr/${sidoEncoded}/${cityEncoded}` })
+    breadcrumbItems.push({ '@type': 'ListItem', position: 4, name: item.serv_nm ?? '복지서비스', item: pageUrl })
+  } else {
+    breadcrumbItems.push({ '@type': 'ListItem', position: 3, name: item.serv_nm ?? '복지서비스', item: pageUrl })
+  }
+  const jsonLdBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems,
+  }
+
+  // FAQ JSON-LD: 지원대상·지원내용·신청방법을 Q&A 형식으로
+  const faqItems = [
+    item.sprt_trgt_cn && { q: `${city} ${item.serv_nm} 지원 대상은 누구인가요?`, a: item.sprt_trgt_cn },
+    item.alw_serv_cn  && { q: `${city} ${item.serv_nm} 지원 내용은 무엇인가요?`, a: item.alw_serv_cn },
+    item.aply_mtd_cn  && { q: `${city} ${item.serv_nm} 신청 방법은 어떻게 되나요?`, a: item.aply_mtd_cn },
+    item.slct_crit_cn && { q: `${city} ${item.serv_nm} 선정 기준은 무엇인가요?`, a: item.slct_crit_cn },
+  ].filter(Boolean) as Array<{ q: string; a: string }>
+
+  const jsonLdFaq = faqItems.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  } : null
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdService) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
+      {jsonLdFaq && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
+      )}
 
       <article className="mx-auto max-w-3xl px-4 py-8">
         <Breadcrumb
