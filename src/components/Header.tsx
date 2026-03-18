@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { SITE_NAME, POLICIES } from '@/lib/constants'
+import { SITE_NAME, WELFARE_THEMES } from '@/lib/constants'
 
 const SIDO_NAV = [
   { label: '서울', full: '서울특별시' },
@@ -26,6 +26,7 @@ const SIDO_NAV = [
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
+  const [selectedSido, setSelectedSido] = useState<string>('')
   const menuRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -78,27 +79,39 @@ export default function Header() {
           <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">지역별</p>
           <div className="grid grid-cols-3 gap-2">
             {SIDO_NAV.map((item) => (
-              <Link
+              <button
                 key={item.full}
-                href={`/region/${encodeURIComponent(item.full)}`}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center rounded-xl border border-gray-100 px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+                onClick={() => setSelectedSido(selectedSido === item.full ? '' : item.full)}
+                className={`flex items-center justify-center rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
+                  selectedSido === item.full
+                    ? 'border-[#1f1bc4] bg-blue-50 text-[#1f1bc4]'
+                    : 'border-gray-100 text-gray-700 hover:border-[#1f1bc4] hover:text-[#1f1bc4]'
+                }`}
               >
                 {item.label}
-              </Link>
+              </button>
             ))}
           </div>
 
-          <p className="mb-3 mt-6 text-xs font-bold uppercase tracking-wider text-gray-400">정책별</p>
+          <p className="mb-3 mt-6 text-xs font-bold uppercase tracking-wider text-gray-400">
+            카테고리별{selectedSido ? ` — ${SIDO_NAV.find((s) => s.full === selectedSido)?.label ?? ''}` : ''}
+          </p>
+          {!selectedSido && (
+            <p className="text-xs text-gray-400 mb-2">지역을 먼저 선택하면 해당 지역 카테고리로 이동합니다</p>
+          )}
           <div className="grid grid-cols-3 gap-2">
-            {POLICIES.map((policy) => (
+            {WELFARE_THEMES.filter((t) => t !== '전체').map((theme) => (
               <Link
-                key={policy.id}
-                href={`/policy/${policy.id}`}
+                key={theme}
+                href={
+                  selectedSido
+                    ? `/region/${encodeURIComponent(selectedSido)}?theme=${encodeURIComponent(theme)}`
+                    : `/?theme=${encodeURIComponent(theme)}`
+                }
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-center rounded-xl border border-gray-100 px-2 py-2 text-center text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
               >
-                {policy.name}
+                {theme}
               </Link>
             ))}
           </div>

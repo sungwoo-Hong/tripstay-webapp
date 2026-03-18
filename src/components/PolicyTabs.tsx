@@ -1,89 +1,126 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { LOCAL_ONLY_POLICIES } from '@/lib/constants'
+import { WELFARE_THEMES, type WelfareTheme } from '@/lib/constants'
+import { createBrowserSupabaseClient } from '@/lib/supabase'
+import type { RawWelfareItem } from '@/types'
 
-const NATIONAL_POLICY_CARDS = [
-  { id: 'birth-support',       icon: '👶', name: '출산지원금',        amount: '지역마다 다름',   desc: '지자체별 출산 장려금 및 축하금' },
-  { id: 'first-voucher',       icon: '🎁', name: '첫만남이용권',      amount: '200만원~300만원', desc: '출생아 대상 국민행복카드 바우처' },
-  { id: 'parental-benefit',    icon: '💰', name: '부모급여',          amount: '월 최대 100만원', desc: '만 0~1세 아동 양육 가정 현금 지원' },
-  { id: 'child-allowance',     icon: '🧒', name: '아동수당',          amount: '월 10만원',       desc: '만 8세 미만 모든 아동 지급' },
-  { id: 'childcare-fee',       icon: '🏫', name: '보육료',            amount: '최대 월 54만원',  desc: '어린이집 이용 보육료 전액 지원' },
-  { id: 'nurturing-allowance', icon: '🏠', name: '양육수당',          amount: '월 최대 20만원',  desc: '가정양육 시 현금 지원' },
-  { id: 'postpartum-care',     icon: '🤱', name: '산모신생아건강관리', amount: '최대 200만원',    desc: '출산 후 건강관리사 가정 파견' },
-  { id: 'pregnancy-fee',       icon: '🏥', name: '임신출산진료비',    amount: '100만원',         desc: '임신·출산 의료비 국민행복카드 지원' },
-]
-
-type Tab = 'local' | 'national'
+const PAGE_SIZE = 12
 
 export default function PolicyTabs() {
-  const [activeTab, setActiveTab] = useState<Tab>('local')
+  const [activeTheme, setActiveTheme] = useState<WelfareTheme>('전체')
+  const [items, setItems] = useState<RawWelfareItem[]>([])
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const tabClass = (tab: Tab) =>
-    `px-4 py-3 text-sm font-bold transition-colors ${
-      activeTab === tab
-        ? 'text-[#1f1bc4] border-b-2 border-[#1f1bc4]'
-        : 'text-gray-500 hover:text-gray-700'
-    }`
+  const fetchItems = useCallback(async (theme: WelfareTheme, currentOffset: number) => {
+    setLoading(true)
+    const supabase = createBrowserSupabaseClient()
+    let query = supabase
+      .from('raw_welfare_api')
+      .select('serv_id, sido, sgg_nm, serv_nm, serv_dgst, intrs_thema_nm')
+      .order('serv_nm', { ascending: true })
+      .range(currentOffset, currentOffset + PAGE_SIZE - 1)
+
+    if (theme !== '전체') {
+      query = query.ilike('intrs_thema_nm', `%${theme}%`)
+    }
+
+    const { data } = await query
+    const fetched = (data ?? []) as RawWelfareItem[]
+    setLoading(false)
+    return fetched
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchItems(activeTheme, 0).then((fetched) => {
+      if (!cancelled) {
+        setItems(fetched)
+        setOffset(fetched.length)
+        setHasMore(fetched.length === PAGE_SIZE)
+      }
+    })
+    return () => { cancelled = true }
+  }, [activeTheme, fetchItems])
+
+  async function handleLoadMore() {
+    const fetched = await fetchItems(activeTheme, offset)
+    setItems((prev) => [...prev, ...fetched])
+    setOffset((prev) => prev + fetched.length)
+    setHasMore(fetched.length === PAGE_SIZE)
+  }
+
+  function handleTabChange(theme: WelfareTheme) {
+    setActiveTheme(theme)
+    setItems([])
+    setOffset(0)
+    setHasMore(false)
+  }
 
   return (
     <section className="mb-10">
       {/* 탭 헤더 */}
-      <div className="mb-6 flex border-b border-gray-200">
-        <button onClick={() => setActiveTab('local')} className={tabClass('local')}>
-          지자체별 복지혜택
-        </button>
-        <button onClick={() => setActiveTab('national')} className={tabClass('national')}>
-          전국 공통 복지혜택
-        </button>
+      <div className="mb-6 flex flex-wrap gap-1 border-b border-gray-200 pb-0">
+        {WELFARE_THEMES.map((theme) => (
+          <button
+            key={theme}
+            onClick={() => handleTabChange(theme)}
+            className={`px-3 py-2.5 text-sm font-semibold transition-colors whitespace-nowrap ${
+              activeTheme === theme
+                ? 'border-b-2 border-[#1f1bc4] text-[#1f1bc4]'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {theme}
+          </button>
+        ))}
       </div>
 
-      {/* 지자체별 */}
-      {activeTab === 'local' && (
-        <>
-          <p className="mb-6 text-sm text-gray-500">지역마다 금액과 조건이 다른 복지혜택을 확인하세요</p>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {LOCAL_ONLY_POLICIES.map((policy) => (
-              <Link
-                key={policy.id}
-                href={`/policy/${policy.id}`}
-                className="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
-              >
-                <span className="text-3xl">{policy.icon}</span>
-                <p className="mt-3 text-sm font-bold text-gray-900 group-hover:text-[#1f1bc4]">
-                  {policy.name}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">{policy.description}</p>
-              </Link>
-            ))}
-          </div>
-        </>
+      {/* 카드 그리드 */}
+      {loading && items.length === 0 ? (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-gray-100" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {items.map((item) => (
+            <Link
+              key={item.serv_id}
+              href={`/welfare/${item.serv_id}`}
+              className="group flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
+            >
+              <p className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-[#1f1bc4]">
+                {item.serv_nm ?? ''}
+              </p>
+              {item.serv_dgst && (
+                <p className="mt-2 text-xs text-gray-500 line-clamp-3">{item.serv_dgst}</p>
+              )}
+              {item.intrs_thema_nm && (
+                <span className="mt-auto pt-2 text-xs font-medium text-[#1f1bc4]">
+                  {item.intrs_thema_nm}
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
       )}
 
-      {/* 전국 공통 */}
-      {activeTab === 'national' && (
-        <>
-          <p className="mb-6 text-sm text-gray-500">
-            소득·지역 관계없이 모든 가정이 받을 수 있는 혜택입니다
-          </p>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {NATIONAL_POLICY_CARDS.map((card) => (
-              <Link
-                key={card.id}
-                href={`/policy/${card.id}`}
-                className="group flex flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
-              >
-                <span className="text-3xl">{card.icon}</span>
-                <span className="text-sm font-bold text-gray-900 group-hover:text-[#1f1bc4]">
-                  {card.name}
-                </span>
-                <span className="text-xs font-semibold text-[#1f1bc4]">{card.amount}</span>
-                <span className="text-xs leading-snug text-gray-500">{card.desc}</span>
-              </Link>
-            ))}
-          </div>
-        </>
+      {/* 더 보기 */}
+      {hasMore && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={handleLoadMore}
+            disabled={loading}
+            className="rounded-lg border border-[#1f1bc4] px-6 py-2.5 text-sm font-semibold text-[#1f1bc4] transition-colors hover:bg-blue-50 disabled:opacity-50"
+          >
+            {loading ? '불러오는 중...' : '더 보기'}
+          </button>
+        </div>
       )}
     </section>
   )

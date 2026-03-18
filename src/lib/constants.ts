@@ -122,3 +122,19 @@ export const DUMMY_NATIONAL_BENEFITS = [
 
 export const SITE_NAME = '복지다모아'
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.tripstay.co.kr'
+
+export const WELFARE_THEMES = [
+  '전체',
+  '서민금융',
+  '임신·출산',
+  '입양·위탁',
+  '교육',
+  '일자리',
+  '안전·위기',
+  '신체건강',
+  '보호·돌봄',
+  '주거',
+  '생활지원',
+] as const
+
+export type WelfareTheme = typeof WELFARE_THEMES[number]

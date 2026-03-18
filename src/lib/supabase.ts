@@ -272,6 +272,27 @@ export async function getAllRawServIds(): Promise<string[]> {
   return allIds
 }
 
+/** 테마별 복지 목록 (메인페이지 탭용) */
+export async function getWelfareByTheme(
+  theme: string,
+  limit = 12,
+  offset = 0,
+): Promise<RawWelfareItem[]> {
+  let query = supabaseServer
+    .from('raw_welfare_api')
+    .select('serv_id, sido, sgg_nm, serv_nm, serv_dgst, intrs_thema_nm')
+    .order('serv_nm', { ascending: true })
+    .range(offset, offset + limit - 1)
+
+  if (theme !== '전체') {
+    query = query.ilike('intrs_thema_nm', `%${theme}%`)
+  }
+
+  const { data, error } = await query
+  if (error) return []
+  return (data ?? []) as RawWelfareItem[]
+}
+
 /** region page용: 시도별 시군구 목록 (raw_welfare_api 기준) */
 export async function getRawCitiesBySido(sido: string): Promise<string[]> {
   const { data, error } = await supabaseServer

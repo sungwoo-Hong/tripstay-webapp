@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { SEARCH_POLICIES } from '@/lib/constants'
+import { WELFARE_THEMES, type WelfareTheme } from '@/lib/constants'
 
 const REGION_DATA: Record<string, string[]> = {
   '서울특별시': ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'],
@@ -33,7 +33,7 @@ interface RegionSearchDropdownProps {
 export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropdownProps = {}) {
   const [sido, setSido] = useState('')
   const [city, setCity] = useState('')
-  const [policy, setPolicy] = useState('')
+  const [theme, setTheme] = useState<WelfareTheme>('전체')
   const router = useRouter()
 
   const cities = sido ? (REGION_DATA[sido] ?? []) : []
@@ -48,8 +48,8 @@ export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropd
     if (targetPolicy) {
       router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${targetPolicy}`)
     } else {
-      const policyId = policy || 'birth-support'
-      router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}/${policyId}`)
+      const params = theme !== '전체' ? `?theme=${encodeURIComponent(theme)}` : ''
+      router.push(`/${encodeURIComponent(sido)}/${encodeURIComponent(city)}${params}`)
     }
   }
 
@@ -83,16 +83,15 @@ export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropd
         ))}
       </select>
 
-      {/* 혜택 항목 드롭다운 — targetPolicy 고정 시 숨김 */}
+      {/* 테마 드롭다운 — targetPolicy 고정 시 숨김 */}
       {!targetPolicy && (
         <select
-          value={policy}
-          onChange={(e) => setPolicy(e.target.value)}
+          value={theme}
+          onChange={(e) => setTheme(e.target.value as WelfareTheme)}
           className={selectClass}
         >
-          <option value="">항목</option>
-          {SEARCH_POLICIES.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+          {WELFARE_THEMES.map((t) => (
+            <option key={t} value={t}>{t}</option>
           ))}
         </select>
       )}
