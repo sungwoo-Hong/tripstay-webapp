@@ -4,27 +4,9 @@ import { notFound } from 'next/navigation'
 import Breadcrumb from '@/components/Breadcrumb'
 import AdBanner from '@/components/AdBanner'
 import { SITE_URL } from '@/lib/constants'
-import { getRawWelfareItem, createAdminClient } from '@/lib/supabase'
+import { getRawWelfareItem } from '@/lib/supabase'
 
 export const revalidate = 86400
-export const dynamicParams = false
-
-export async function generateStaticParams() {
-  const sb = createAdminClient()
-  const all: { servId: string }[] = []
-  let page = 0
-  while (true) {
-    const { data, error } = await sb
-      .from('raw_welfare_api')
-      .select('serv_id')
-      .range(page * 1000, (page + 1) * 1000 - 1)
-    if (error || !data || data.length === 0) break
-    for (const row of data) all.push({ servId: row.serv_id })
-    if (data.length < 1000) break
-    page++
-  }
-  return all
-}
 
 interface PageProps {
   params: Promise<{ servId: string }>
