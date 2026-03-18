@@ -1,18 +1,24 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Breadcrumb from '@/components/Breadcrumb'
-import { getAllRawCityParams, getRawWelfareItemsByCity } from '@/lib/supabase'
+import { REGION_DATA } from '@/lib/constants'
+import { getRawWelfareItemsByCity } from '@/lib/supabase'
 
 interface PageProps {
   params: Promise<{ sido: string; city: string }>
 }
 
-export async function generateStaticParams() {
-  const params = await getAllRawCityParams()
-  return params.map(({ sido, sgg_nm }) => ({
-    sido: encodeURIComponent(sido),
-    city: encodeURIComponent(sgg_nm),
-  }))
+export function generateStaticParams() {
+  const params: { sido: string; city: string }[] = []
+  for (const [sido, cities] of Object.entries(REGION_DATA)) {
+    for (const city of cities) {
+      params.push({
+        sido: encodeURIComponent(sido),
+        city: encodeURIComponent(city),
+      })
+    }
+  }
+  return params
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

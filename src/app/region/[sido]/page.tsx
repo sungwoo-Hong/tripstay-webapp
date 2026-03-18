@@ -1,9 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import Breadcrumb from '@/components/Breadcrumb'
 import { SIDO_LIST, REGION_DATA } from '@/lib/constants'
-import { getCitiesBySido } from '@/lib/supabase'
 
 interface PageProps {
   params: Promise<{ sido: string }>
@@ -25,9 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function RegionPage({ params }: PageProps) {
   const { sido } = await params
   const sidoDecoded = decodeURIComponent(sido)
-
-  const dbCities = await getCitiesBySido(sidoDecoded)
-  const cities = dbCities.length > 0 ? dbCities : (REGION_DATA[sidoDecoded] ?? [])
+  const cities = REGION_DATA[sidoDecoded] ?? []
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -42,30 +38,18 @@ export default async function RegionPage({ params }: PageProps) {
         </p>
       </div>
 
-      {cities.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-12 text-center">
-          <p className="text-gray-500">등록된 지역 정보가 없습니다</p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {cities.map((city) => (
           <Link
-            href="/"
-            className="mt-4 inline-block rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+            key={city}
+            href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(city)}`}
+            className="group rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
           >
-            홈으로 돌아가기
+            <p className="font-bold text-gray-900 group-hover:text-[#1f1bc4]">{city}</p>
+            <p className="mt-1 text-xs text-gray-400">{sidoDecoded}</p>
           </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {cities.map((city) => (
-            <Link
-              key={city}
-              href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(city)}`}
-              className="group rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md"
-            >
-              <p className="font-bold text-gray-900 group-hover:text-[#1f1bc4]">{city}</p>
-              <p className="mt-1 text-xs text-gray-400">{sidoDecoded}</p>
-            </Link>
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   )
 }
