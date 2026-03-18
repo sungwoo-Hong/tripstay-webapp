@@ -80,7 +80,7 @@ export default function RegionSearchDropdown({ targetPolicy }: RegionSearchDropd
       <button
         onClick={handleSearch}
         disabled={!city}
-        className="shrink-0 rounded-lg bg-[#1f1bc4] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1a17a0] disabled:cursor-not-allowed disabled:opacity-70 whitespace-nowrap"
+        className="shrink-0 cursor-pointer rounded-lg bg-[#1f1bc4] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1a17a0] disabled:cursor-not-allowed disabled:opacity-70 whitespace-nowrap"
       >
         찾기
       </button>

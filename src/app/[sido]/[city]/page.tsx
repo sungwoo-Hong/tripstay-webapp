@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { cache } from 'react'
 import Breadcrumb from '@/components/Breadcrumb'
 import { REGION_DATA, POLICIES } from '@/lib/constants'
 import { getRawWelfareItemsByCity, getBenefitsByCity } from '@/lib/supabase'
@@ -8,6 +9,18 @@ interface PageProps {
   params: Promise<{ sido: string; city: string }>
   searchParams: Promise<{ theme?: string }>
 }
+
+// React cache로 generateMetadata와 페이지 컴포넌트 간 DB 조회 공유
+const fetchCityData = cache(async (sido: string, city: string) => {
+  const allRawItems = await getRawWelfareItemsByCity(sido, city)
+  const benefitPolicies =
+    allRawItems.length === 0 ? await getBenefitsByCity(sido, city) : []
+  const uniquePolicies = benefitPolicies.filter(
+    (b, i, arr) => arr.findIndex((x) => x.policy_id === b.policy_id) === i,
+  )
+  const isEmpty = allRawItems.length === 0 && uniquePolicies.length === 0
+  return { allRawItems, uniquePolicies, isEmpty }
+})
 
 export function generateStaticParams() {
   const params: { sido: string; city: string }[] = []
@@ -23,9 +36,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { sido, city } = await params
   const sidoDecoded = decodeURIComponent(sido)
   const cityDecoded = decodeURIComponent(city)
+  const { isEmpty } = await fetchCityData(sidoDecoded, cityDecoded)
+
+  if (isEmpty) {
+    return {
+      title: `${cityDecoded} 복지서비스 | 복지다모아`,
+      description: `${cityDecoded} 복지서비스 정보를 준비 중입니다.`,
+      robots: { index: false, follow: false },
+    }
+  }
+
   return {
-    title: `${cityDecoded} 복지혜택 총정리 | 복지다모아`,
-    description: `${cityDecoded}의 출산, 보육, 주거, 청년 등 모든 지역 복지서비스를 한눈에 확인하세요.`,
+    title: `${cityDecoded} 혜택 정보 - 출산·보육·주거·청년 복지 총정리 | 복지다모아`,
+    description: `${sidoDecoded} ${cityDecoded}의 출산지원금, 보육료, 주거지원, 청년 복지 등 모든 지역 복지서비스를 한눈에 확인하세요.`,
+    openGraph: {
+      title: `${cityDecoded} 혜택 정보 | 복지다모아`,
+      description: `${cityDecoded} 복지서비스 총정리. 출산·보육·주거·청년 등 지역 맞춤 혜택을 확인하세요.`,
+    },
   }
 }
 
@@ -66,7 +93,7 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
   const sidoDecoded = decodeURIComponent(sido)
   const cityDecoded = decodeURIComponent(city)
 
-  const allRawItems = await getRawWelfareItemsByCity(sidoDecoded, cityDecoded)
+  const { allRawItems, uniquePolicies, isEmpty } = await fetchCityData(sidoDecoded, cityDecoded)
 
   // 테마 필터 적용
   const rawItems =
@@ -74,17 +101,8 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
       ? allRawItems.filter((item) => matchesTheme(item.intrs_thema_nm, theme))
       : allRawItems
 
-  // raw_welfare_api에 데이터 없으면 benefits 테이블 정책 목록으로 fallback
-  const benefitPolicies =
-    allRawItems.length === 0 ? await getBenefitsByCity(sidoDecoded, cityDecoded) : []
-
-  // benefits 중복 policy_id 제거
-  const uniquePolicies = benefitPolicies.filter(
-    (b, i, arr) => arr.findIndex((x) => x.policy_id === b.policy_id) === i,
-  )
-
-  const serviceCount = rawItems.length > 0 ? rawItems.length : uniquePolicies.length
-  const countLabel = rawItems.length > 0 ? `${serviceCount}개 서비스` : `${serviceCount}개 정책`
+  const serviceCount = allRawItems.length > 0 ? rawItems.length : uniquePolicies.length
+  const countLabel = allRawItems.length > 0 ? `${serviceCount}개 서비스` : `${serviceCount}개 정책`
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -98,7 +116,7 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          {cityDecoded} {theme && theme !== '전체' ? `· ${theme}` : '복지서비스'}
+          {cityDecoded} {theme && theme !== '전체' ? `· ${theme}` : '혜택 정보'}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
           {sidoDecoded} · {countLabel}
@@ -182,7 +200,7 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
       )}
 
       {/* 데이터 없음 */}
-      {allRawItems.length === 0 && uniquePolicies.length === 0 && (
+      {isEmpty && (
         <div className="flex flex-col items-center gap-4 py-20 text-center text-gray-500">
           <p>등록된 복지서비스 정보가 없습니다.</p>
           <Link
