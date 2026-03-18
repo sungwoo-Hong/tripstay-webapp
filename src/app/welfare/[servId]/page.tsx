@@ -18,14 +18,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!item) return { title: '복지 서비스 정보' }
 
   const city = item.sgg_nm ?? item.sido
-  const title = `${item.serv_nm} | ${city} 복지서비스`
+  const localTitle = `${city} ${item.serv_nm}`
+  const title = `${localTitle} | 복지다모아`
   const description = item.serv_dgst ?? `${city} ${item.serv_nm} 지원 대상, 신청 방법 안내`
   const url = `${SITE_URL}/welfare/${servId}`
 
   return {
     title,
     description,
-    openGraph: { title, description, url, type: 'article' },
+    openGraph: { title: localTitle, description, url, type: 'article' },
     alternates: { canonical: url },
   }
 }
@@ -111,7 +112,7 @@ export default async function WelfareDetailPage({ params }: PageProps) {
 
         {/* 제목 */}
         <h1 className="mb-3 mt-6 text-2xl font-bold leading-snug text-gray-900 sm:text-3xl">
-          {item.serv_nm}
+          {city} {item.serv_nm}
         </h1>
 
         {/* 메타 정보 */}
