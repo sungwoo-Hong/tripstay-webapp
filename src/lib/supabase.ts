@@ -192,7 +192,7 @@ export async function getTopBirthSupport(limit = 5): Promise<TopBirthSupportItem
 
 // ── raw_welfare_api 헬퍼 (새 아키텍처) ──────────────────────
 
-/** 시군구별 복지 목록 (city page용) */
+/** 시군구별 복지 목록 (city page용) — 시군구 전용 + 시도 공통(sgg_nm=null) 포함 */
 export async function getRawWelfareItemsByCity(
   sido: string,
   sggNm: string,
@@ -201,7 +201,8 @@ export async function getRawWelfareItemsByCity(
     .from('raw_welfare_api')
     .select('serv_id, sido, sgg_nm, serv_nm, serv_dgst, life_nm, intrs_thema_nm, sprt_cyc_nm, srv_pvsn_nm, aply_mtd_nm, detail_fetched')
     .eq('sido', sido)
-    .eq('sgg_nm', sggNm)
+    .or(`sgg_nm.eq.${sggNm},sgg_nm.is.null`)
+    .order('sgg_nm', { ascending: false }) // 시군구 전용을 먼저, 공통은 뒤에
     .order('serv_nm', { ascending: true })
 
   if (error) return []

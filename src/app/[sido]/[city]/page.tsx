@@ -12,9 +12,10 @@ interface PageProps {
 
 // React cache로 generateMetadata와 페이지 컴포넌트 간 DB 조회 공유
 const fetchCityData = cache(async (sido: string, city: string) => {
-  const allRawItems = await getRawWelfareItemsByCity(sido, city)
-  const benefitPolicies =
-    allRawItems.length === 0 ? await getBenefitsByCity(sido, city) : []
+  const [allRawItems, benefitPolicies] = await Promise.all([
+    getRawWelfareItemsByCity(sido, city),
+    getBenefitsByCity(sido, city),
+  ])
   const uniquePolicies = benefitPolicies.filter(
     (b, i, arr) => arr.findIndex((x) => x.policy_id === b.policy_id) === i,
   )
@@ -95,14 +96,13 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
 
   const { allRawItems, uniquePolicies, isEmpty } = await fetchCityData(sidoDecoded, cityDecoded)
 
-  // 테마 필터 적용
+  // 테마 필터 적용 (raw_welfare_api 항목만 필터링)
   const rawItems =
     theme && theme !== '전체'
       ? allRawItems.filter((item) => matchesTheme(item.intrs_thema_nm, theme))
       : allRawItems
 
-  const serviceCount = allRawItems.length > 0 ? rawItems.length : uniquePolicies.length
-  const countLabel = allRawItems.length > 0 ? `${serviceCount}개 서비스` : `${serviceCount}개 정책`
+  const totalCount = rawItems.length + (theme ? 0 : uniquePolicies.length)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -119,7 +119,7 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
           {cityDecoded} {theme && theme !== '전체' ? `· ${theme}` : '혜택 정보'}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          {sidoDecoded} · {countLabel}
+          {sidoDecoded} · {totalCount}개 서비스
           {theme && theme !== '전체' && (
             <Link
               href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(cityDecoded)}`}
@@ -131,54 +131,23 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
         </p>
       </div>
 
-      {/* raw_welfare_api 서비스 목록 */}
-      {rawItems.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {rawItems.map((item) => (
-            <Link
-              key={item.serv_id}
-              href={`/welfare/${item.serv_id}`}
-              className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-[#1f1bc4] hover:shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-gray-900 leading-snug">
-                  {item.serv_nm}
-                </p>
-                {item.srv_pvsn_nm && (
-                  <span className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] text-gray-500">
-                    {item.srv_pvsn_nm}
-                  </span>
-                )}
-              </div>
-              {item.serv_dgst && (
-                <p className="line-clamp-2 text-xs text-gray-500">{item.serv_dgst}</p>
-              )}
-              <div className="flex flex-wrap gap-1">
-                <TagBadge value={item.life_nm} />
-                <TagBadge value={item.intrs_thema_nm} />
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* raw_welfare_api에 데이터 있으나 테마 필터 결과 없음 */}
-      {allRawItems.length > 0 && rawItems.length === 0 && (
+      {/* 데이터 없음 */}
+      {isEmpty && (
         <div className="flex flex-col items-center gap-4 py-20 text-center text-gray-500">
-          <p>해당 테마의 서비스가 없습니다.</p>
+          <p>등록된 복지서비스 정보가 없습니다.</p>
           <Link
-            href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(cityDecoded)}`}
+            href="/"
             className="rounded-lg bg-[#1f1bc4] px-4 py-2 text-sm font-medium text-white hover:bg-[#1a17a0]"
           >
-            전체 서비스 보기
+            홈으로 돌아가기
           </Link>
         </div>
       )}
 
-      {/* benefits 테이블 정책 카드 (fallback) */}
-      {allRawItems.length === 0 && uniquePolicies.length > 0 && (
-        <>
-          <p className="mb-4 text-sm text-gray-500">이 지역의 복지 정책 정보를 확인하세요</p>
+      {/* ── 지역 지원금 (benefits 테이블) ── */}
+      {!theme && uniquePolicies.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-base font-bold text-gray-800">지역 지원금</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {uniquePolicies.map((b) => {
               const meta = POLICIES.find((p) => p.id === b.policy_id)
@@ -196,18 +165,61 @@ export default async function CityWelfarePage({ params, searchParams }: PageProp
               )
             })}
           </div>
-        </>
+        </section>
       )}
 
-      {/* 데이터 없음 */}
-      {isEmpty && (
+      {/* ── 복지서비스 (raw_welfare_api) ── */}
+      {rawItems.length > 0 && (
+        <section>
+          {!theme && uniquePolicies.length > 0 && (
+            <h2 className="mb-3 text-base font-bold text-gray-800">복지서비스</h2>
+          )}
+          <div className="flex flex-col gap-3">
+            {rawItems.map((item) => (
+              <Link
+                key={item.serv_id}
+                href={`/welfare/${item.serv_id}`}
+                className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-[#1f1bc4] hover:shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-gray-900 leading-snug">
+                    {item.serv_nm}
+                  </p>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    {item.sgg_nm === null && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] text-blue-700">
+                        {sidoDecoded.replace('특별자치시', '').replace('특별자치도', '').replace('특별시', '').replace('광역시', '')} 공통
+                      </span>
+                    )}
+                    {item.srv_pvsn_nm && (
+                      <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] text-gray-500">
+                        {item.srv_pvsn_nm}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {item.serv_dgst && (
+                  <p className="line-clamp-2 text-xs text-gray-500">{item.serv_dgst}</p>
+                )}
+                <div className="flex flex-wrap gap-1">
+                  <TagBadge value={item.life_nm} />
+                  <TagBadge value={item.intrs_thema_nm} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 테마 필터 결과 없음 */}
+      {allRawItems.length > 0 && rawItems.length === 0 && theme && theme !== '전체' && (
         <div className="flex flex-col items-center gap-4 py-20 text-center text-gray-500">
-          <p>등록된 복지서비스 정보가 없습니다.</p>
+          <p>해당 테마의 서비스가 없습니다.</p>
           <Link
-            href="/"
+            href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(cityDecoded)}`}
             className="rounded-lg bg-[#1f1bc4] px-4 py-2 text-sm font-medium text-white hover:bg-[#1a17a0]"
           >
-            홈으로 돌아가기
+            전체 서비스 보기
           </Link>
         </div>
       )}
