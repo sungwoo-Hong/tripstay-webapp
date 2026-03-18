@@ -4,15 +4,12 @@ import { notFound } from 'next/navigation'
 import Breadcrumb from '@/components/Breadcrumb'
 import AdBanner from '@/components/AdBanner'
 import { SITE_URL } from '@/lib/constants'
-import { getAllRawServIds, getRawWelfareItem } from '@/lib/supabase'
+import { getRawWelfareItem } from '@/lib/supabase'
+
+export const revalidate = 3600
 
 interface PageProps {
   params: Promise<{ servId: string }>
-}
-
-export async function generateStaticParams() {
-  const servIds = await getAllRawServIds()
-  return servIds.map((servId) => ({ servId }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
