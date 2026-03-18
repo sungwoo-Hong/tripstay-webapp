@@ -39,7 +39,8 @@ export default function PolicyTabs() {
 
   function handleCityClick(city: string) {
     if (!selectedSido) return
-    router.push(`/${encodeURIComponent(selectedSido)}/${encodeURIComponent(city)}`)
+    const themeParam = selectedTheme && selectedTheme !== '전체' ? `?theme=${encodeURIComponent(selectedTheme)}` : ''
+    router.push(`/${encodeURIComponent(selectedSido)}/${encodeURIComponent(city)}${themeParam}`)
   }
 
   function goBack() {
@@ -69,7 +70,7 @@ export default function PolicyTabs() {
             <button
               key={theme}
               onClick={() => handleThemeClick(theme)}
-              className="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-3 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md sm:p-5"
+              className="group flex cursor-pointer flex-col items-center rounded-xl border border-gray-200 bg-white p-3 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md sm:p-5"
             >
               <span className="text-2xl sm:text-3xl">{icon}</span>
               <p className="mt-2 text-xs font-bold text-gray-900 group-hover:text-[#1f1bc4] sm:mt-3 sm:text-sm">
@@ -91,7 +92,7 @@ export default function PolicyTabs() {
               <button
                 key={sido}
                 onClick={() => handleSidoClick(sido)}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-3 text-center text-sm font-medium text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:text-[#1f1bc4] hover:shadow-md"
+                className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-3 text-center text-sm font-medium text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:text-[#1f1bc4] hover:shadow-md"
               >
                 {sido.replace('특별자치시', '').replace('특별자치도', '').replace('특별시', '').replace('광역시', '').replace('광역자치도', '')}
               </button>
@@ -111,7 +112,7 @@ export default function PolicyTabs() {
               <button
                 key={city}
                 onClick={() => handleCityClick(city)}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-3 text-center text-sm font-medium text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:text-[#1f1bc4] hover:shadow-md"
+                className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-3 text-center text-sm font-medium text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:text-[#1f1bc4] hover:shadow-md"
               >
                 {city}
               </button>

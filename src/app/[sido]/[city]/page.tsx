@@ -6,6 +6,7 @@ import { getRawWelfareItemsByCity, getBenefitsByCity } from '@/lib/supabase'
 
 interface PageProps {
   params: Promise<{ sido: string; city: string }>
+  searchParams: Promise<{ theme?: string }>
 }
 
 export function generateStaticParams() {
@@ -25,6 +26,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${cityDecoded} 복지혜택 총정리 | 복지다모아`,
     description: `${cityDecoded}의 출산, 보육, 주거, 청년 등 모든 지역 복지서비스를 한눈에 확인하세요.`,
+  }
+}
+
+function matchesTheme(intrs_thema_nm: string | null | undefined, theme: string): boolean {
+  if (!intrs_thema_nm) return false
+  try {
+    const parsed = JSON.parse(intrs_thema_nm)
+    const arr = Array.isArray(parsed) ? parsed : [String(parsed)]
+    return arr.some((t: string) => t.includes(theme))
+  } catch {
+    return intrs_thema_nm.includes(theme)
   }
 }
 
@@ -48,21 +60,31 @@ function TagBadge({ value }: { value: string | null }) {
   )
 }
 
-export default async function CityWelfarePage({ params }: PageProps) {
+export default async function CityWelfarePage({ params, searchParams }: PageProps) {
   const { sido, city } = await params
+  const { theme } = await searchParams
   const sidoDecoded = decodeURIComponent(sido)
   const cityDecoded = decodeURIComponent(city)
 
-  const rawItems = await getRawWelfareItemsByCity(sidoDecoded, cityDecoded)
+  const allRawItems = await getRawWelfareItemsByCity(sidoDecoded, cityDecoded)
+
+  // 테마 필터 적용
+  const rawItems =
+    theme && theme !== '전체'
+      ? allRawItems.filter((item) => matchesTheme(item.intrs_thema_nm, theme))
+      : allRawItems
 
   // raw_welfare_api에 데이터 없으면 benefits 테이블 정책 목록으로 fallback
   const benefitPolicies =
-    rawItems.length === 0 ? await getBenefitsByCity(sidoDecoded, cityDecoded) : []
+    allRawItems.length === 0 ? await getBenefitsByCity(sidoDecoded, cityDecoded) : []
 
   // benefits 중복 policy_id 제거
   const uniquePolicies = benefitPolicies.filter(
     (b, i, arr) => arr.findIndex((x) => x.policy_id === b.policy_id) === i,
   )
+
+  const serviceCount = rawItems.length > 0 ? rawItems.length : uniquePolicies.length
+  const countLabel = rawItems.length > 0 ? `${serviceCount}개 서비스` : `${serviceCount}개 정책`
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -76,10 +98,18 @@ export default async function CityWelfarePage({ params }: PageProps) {
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          {cityDecoded} 복지서비스
+          {cityDecoded} {theme && theme !== '전체' ? `· ${theme}` : '복지서비스'}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          {sidoDecoded} · {rawItems.length > 0 ? `${rawItems.length}개 서비스` : `${uniquePolicies.length}개 정책`}
+          {sidoDecoded} · {countLabel}
+          {theme && theme !== '전체' && (
+            <Link
+              href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(cityDecoded)}`}
+              className="ml-2 text-[#1f1bc4] hover:underline"
+            >
+              전체 보기
+            </Link>
+          )}
         </p>
       </div>
 
@@ -114,8 +144,21 @@ export default async function CityWelfarePage({ params }: PageProps) {
         </div>
       )}
 
+      {/* raw_welfare_api에 데이터 있으나 테마 필터 결과 없음 */}
+      {allRawItems.length > 0 && rawItems.length === 0 && (
+        <div className="flex flex-col items-center gap-4 py-20 text-center text-gray-500">
+          <p>해당 테마의 서비스가 없습니다.</p>
+          <Link
+            href={`/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(cityDecoded)}`}
+            className="rounded-lg bg-[#1f1bc4] px-4 py-2 text-sm font-medium text-white hover:bg-[#1a17a0]"
+          >
+            전체 서비스 보기
+          </Link>
+        </div>
+      )}
+
       {/* benefits 테이블 정책 카드 (fallback) */}
-      {rawItems.length === 0 && uniquePolicies.length > 0 && (
+      {allRawItems.length === 0 && uniquePolicies.length > 0 && (
         <>
           <p className="mb-4 text-sm text-gray-500">이 지역의 복지 정책 정보를 확인하세요</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -139,7 +182,7 @@ export default async function CityWelfarePage({ params }: PageProps) {
       )}
 
       {/* 데이터 없음 */}
-      {rawItems.length === 0 && uniquePolicies.length === 0 && (
+      {allRawItems.length === 0 && uniquePolicies.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-20 text-center text-gray-500">
           <p>등록된 복지서비스 정보가 없습니다.</p>
           <Link
