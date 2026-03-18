@@ -1,11 +1,12 @@
 import type { MetadataRoute } from 'next'
 import { SITE_URL } from '@/lib/constants'
-import { supabaseServer } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase'
 
 const CHUNK = 1000
 
 export async function generateSitemaps() {
-  const { count } = await supabaseServer
+  const sb = createAdminClient()
+  const { count } = await sb
     .from('raw_welfare_api')
     .select('*', { count: 'exact', head: true })
 
@@ -15,14 +16,18 @@ export async function generateSitemaps() {
 }
 
 export default async function sitemap({
-  id,
+  id: rawId,
 }: {
-  id: number
+  id: number | Promise<number>
 }): Promise<MetadataRoute.Sitemap> {
-  const { data } = await supabaseServer
+  const id = Number(await rawId)
+  const sb = createAdminClient()
+  const { data, error } = await sb
     .from('raw_welfare_api')
     .select('serv_id')
     .range(id * CHUNK, (id + 1) * CHUNK - 1)
+
+  if (error) console.error('[welfare/sitemap] fetch error id=%d:', id, error)
 
   const now = new Date()
   return (data ?? []).map(({ serv_id }) => ({
