@@ -100,8 +100,8 @@ export default async function BenefitDetailPage({ params }: PageProps) {
         <Breadcrumb
           items={[
             { label: '홈', href: '/' },
-            { label: sidoDecoded, href: `/region/${sido}` },
-            { label: cityDecoded, href: `/region/${sido}` },
+            { label: sidoDecoded, href: `/region/${encodeURIComponent(sidoDecoded)}` },
+            { label: cityDecoded, href: `/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(cityDecoded)}` },
             { label: policyObj?.name ?? policy },
           ]}
         />
@@ -154,8 +154,8 @@ export default async function BenefitDetailPage({ params }: PageProps) {
         <Breadcrumb
           items={[
             { label: '홈', href: '/' },
-            { label: sidoDecoded, href: `/region/${sido}` },
-            { label: cityDecoded, href: `/region/${sido}` },
+            { label: sidoDecoded, href: `/region/${encodeURIComponent(sidoDecoded)}` },
+            { label: cityDecoded, href: `/${encodeURIComponent(sidoDecoded)}/${encodeURIComponent(cityDecoded)}` },
             { label: benefit.policy_name },
           ]}
         />

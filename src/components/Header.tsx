@@ -50,8 +50,14 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* PC 네비게이션 - 17개 시도 */}
+        {/* PC 네비게이션 - 검색 + 17개 시도 */}
         <nav className="hidden items-center gap-1.5 text-xs sm:flex">
+          <Link
+            href="/search"
+            className="shrink-0 rounded px-1.5 py-1 text-gray-600 transition-colors hover:bg-blue-50 hover:text-[#1f1bc4]"
+          >
+            🔍 검색
+          </Link>
           {SIDO_NAV.map((item) => (
             <Link
               key={item.full}
@@ -105,8 +111,8 @@ export default function Header() {
                 key={theme}
                 href={
                   selectedSido
-                    ? `/region/${encodeURIComponent(selectedSido)}?theme=${encodeURIComponent(theme)}`
-                    : `/?theme=${encodeURIComponent(theme)}`
+                    ? `/region/${encodeURIComponent(selectedSido)}`
+                    : '/'
                 }
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-center rounded-xl border border-gray-100 px-2 py-2 text-center text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"

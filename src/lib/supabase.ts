@@ -52,29 +52,6 @@ export async function getBenefit(
   return data
 }
 
-export async function getBenefitsByPolicy(
-  policyId: string,
-): Promise<{ count: number }> {
-  const { count, error } = await supabaseServer
-    .from('benefits')
-    .select('*', { count: 'exact', head: true })
-    .eq('policy_id', policyId)
-
-  if (error) return { count: 0 }
-  return { count: count ?? 0 }
-}
-
-export async function getBenefitsBySido(sido: string): Promise<Benefit[]> {
-  const { data, error } = await supabaseServer
-    .from('benefits')
-    .select('city_name, policy_id, policy_name, title, slug')
-    .eq('sido', sido)
-    .order('city_name', { ascending: true })
-    .order('policy_id',  { ascending: true })
-
-  if (error) return []
-  return (data ?? []) as Benefit[]
-}
 
 export async function getAllBenefitParams(): Promise<
   Array<{ sido: string; city_name: string; policy_id: string }>
@@ -123,24 +100,6 @@ export async function getNationalBenefits(policyId: string): Promise<NationalBen
   return (data ?? []) as NationalBenefit[]
 }
 
-export async function getRecentBenefits(limit = 12): Promise<Benefit[]> {
-  const { data, error } = await supabaseServer
-    .from('benefits')
-    .select('sido, city_name, policy_id, policy_name, created_at')
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  if (error) return []
-  return (data ?? []) as Benefit[]
-}
-
-export type TopBirthSupportItem = {
-  title: string
-  sido: string
-  city_name: string
-  amount: number
-}
-
 /** 특정 시군구에 실제 존재하는 policy_id 목록 조회 */
 export async function getCityPolicies(sido: string, cityName: string): Promise<string[]> {
   const { data, error } = await supabaseServer
@@ -175,19 +134,6 @@ export async function searchCities(
     seen.add(key)
     return true
   })
-}
-
-export async function getTopBirthSupport(limit = 5): Promise<TopBirthSupportItem[]> {
-  const { data, error } = await supabaseServer
-    .from('benefits')
-    .select('title, sido, city_name, amount')
-    .eq('policy_id', 'birth-support')
-    .not('amount', 'is', null)
-    .order('amount', { ascending: false })
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []) as TopBirthSupportItem[]
 }
 
 // ── raw_welfare_api 헬퍼 (새 아키텍처) ──────────────────────
@@ -252,28 +198,7 @@ export async function getAllRawCityParams(): Promise<
   })
 }
 
-/** generateStaticParams용: welfare detail page */
-export async function getAllRawServIds(): Promise<string[]> {
-  const allIds: string[] = []
-  const pageSize = 1000
-  let page = 0
-
-  while (true) {
-    const { data, error } = await supabaseServer
-      .from('raw_welfare_api')
-      .select('serv_id')
-      .range(page * pageSize, (page + 1) * pageSize - 1)
-
-    if (error || !data || data.length === 0) break
-    allIds.push(...data.map((d) => d.serv_id))
-    if (data.length < pageSize) break
-    page++
-  }
-
-  return allIds
-}
-
-/** 테마별 복지 목록 (메인페이지 탭용) */
+/** 테마별 복지 목록 */
 export async function getWelfareByTheme(
   theme: string,
   limit = 12,
@@ -294,45 +219,3 @@ export async function getWelfareByTheme(
   return (data ?? []) as RawWelfareItem[]
 }
 
-/** region page용: 시도별 시군구 목록 (benefits 테이블 기준 — 안정적) */
-export async function getCitiesBySido(sido: string): Promise<string[]> {
-  const { data, error } = await supabaseServer
-    .from('benefits')
-    .select('city_name')
-    .eq('sido', sido)
-    .order('city_name', { ascending: true })
-
-  if (error) return []
-
-  const seen = new Set<string>()
-  const cities: string[] = []
-  for (const row of data ?? []) {
-    if (row.city_name && !seen.has(row.city_name)) {
-      seen.add(row.city_name)
-      cities.push(row.city_name)
-    }
-  }
-  return cities
-}
-
-/** region page용: 시도별 시군구 목록 (raw_welfare_api 기준) */
-export async function getRawCitiesBySido(sido: string): Promise<string[]> {
-  const { data, error } = await supabaseServer
-    .from('raw_welfare_api')
-    .select('sgg_nm')
-    .eq('sido', sido)
-    .not('sgg_nm', 'is', null)
-    .order('sgg_nm', { ascending: true })
-
-  if (error) return []
-
-  const seen = new Set<string>()
-  const cities: string[] = []
-  for (const row of data ?? []) {
-    if (row.sgg_nm && !seen.has(row.sgg_nm)) {
-      seen.add(row.sgg_nm)
-      cities.push(row.sgg_nm)
-    }
-  }
-  return cities
-}
