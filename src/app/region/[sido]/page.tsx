@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import Breadcrumb from '@/components/Breadcrumb'
-import { SIDO_LIST } from '@/lib/constants'
+import { SIDO_LIST, REGION_DATA } from '@/lib/constants'
 import { getCitiesBySido } from '@/lib/supabase'
 
 interface PageProps {
@@ -26,7 +26,8 @@ export default async function RegionPage({ params }: PageProps) {
   const { sido } = await params
   const sidoDecoded = decodeURIComponent(sido)
 
-  const cities = await getCitiesBySido(sidoDecoded)
+  const dbCities = await getCitiesBySido(sidoDecoded)
+  const cities = dbCities.length > 0 ? dbCities : (REGION_DATA[sidoDecoded] ?? [])
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
