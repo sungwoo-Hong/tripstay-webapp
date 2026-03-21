@@ -1,29 +1,88 @@
-import { SITE_NAME } from '@/lib/constants'
+import Link from 'next/link'
+import { SITE_NAME, POLICIES, SIDO_LIST } from '@/lib/constants'
+
+function shortSido(sido: string): string {
+  return sido.replace(/(특별자치시|특별자치도|광역시|특별시|도|시)$/, '')
+}
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-gray-200 bg-gray-50">
-      <div className="mx-auto max-w-5xl px-4 py-10 text-center">
-        <p className="mb-2 text-base font-bold text-gray-900">{SITE_NAME}</p>
-        <p className="mb-6 text-xs leading-relaxed text-gray-500">
-          전국 250개 시/군/구 출산·육아 복지정책을 한 곳에서 확인하세요.
-        </p>
-
-        <div className="mb-6">
-          <p className="mb-3 text-xs font-bold text-gray-400">이용방법</p>
-          <ol className="space-y-1 text-xs text-gray-500">
-            <li>시/도와 시/군/구를 선택하세요</li>
-            <li>출산지원금 정보를 확인하세요</li>
-            <li>공식 사이트에서 신청하세요</li>
-          </ol>
+    <footer className="bg-gray-900">
+      <div className="mx-auto max-w-5xl px-4 py-12">
+        {/* 브랜드 */}
+        <div className="mb-10">
+          <p className="text-lg font-bold text-white">{SITE_NAME}</p>
+          <p className="mt-1 text-sm text-gray-400">전국 복지서비스 정보 플랫폼</p>
         </div>
 
-        <div className="border-t border-gray-200 pt-6">
-          <p className="text-xs text-gray-400">
-            본 사이트의 복지정책 정보는 참고용이며,<br />
-            정확한 내용은 관할 기관에 문의하세요.
+        {/* 3열 링크 그리드 */}
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+          {/* 출산·육아 정책 */}
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">출산·육아 정책</p>
+            <ul className="space-y-2">
+              {POLICIES.map((policy) => (
+                <li key={policy.id}>
+                  <Link
+                    href={`/policy/${policy.id}`}
+                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                  >
+                    {policy.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 지역별 정보 */}
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">지역별 정보</p>
+            <ul className="space-y-2">
+              {SIDO_LIST.map((sido) => (
+                <li key={sido}>
+                  <Link
+                    href={`/region/${encodeURIComponent(sido)}`}
+                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                  >
+                    {shortSido(sido)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 이용 안내 */}
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">이용 안내</p>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  이용약관
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  개인정보처리방침
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="mailto:contact@tripstay.co.kr"
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  문의하기
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* 하단 구분선 */}
+        <div className="mt-12 border-t border-gray-800 pt-6">
+          <p className="mb-2 text-xs text-gray-500">
+            본 사이트의 복지정보는 참고용이며, 정확한 내용은 관할 기관에 문의하세요.
           </p>
-          <p className="mt-2 text-xs text-gray-400">© 2026 {SITE_NAME}</p>
+          <p className="text-xs text-gray-600">© 2026 {SITE_NAME}</p>
         </div>
       </div>
     </footer>
