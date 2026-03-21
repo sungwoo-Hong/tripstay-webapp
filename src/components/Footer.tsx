@@ -66,12 +66,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href="mailto:contact@tripstay.co.kr"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
-                >
+                <Link href="/contact" className="text-sm text-gray-400 hover:text-white transition-colors">
                   문의하기
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

@@ -92,10 +92,10 @@ export default function PrivacyPage() {
         <p className="text-sm leading-relaxed text-gray-600">
           개인정보 관련 문의는{' '}
           <a
-            href="mailto:contact@tripstay.co.kr"
+            href="mailto:hsw0614dmz@gmail.com"
             className="text-blue-600 underline hover:text-blue-800"
           >
-            contact@tripstay.co.kr
+            hsw0614dmz@gmail.com
           </a>
           로 연락해 주세요.
         </p>
