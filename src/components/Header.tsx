@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { SITE_NAME, WELFARE_THEMES } from '@/lib/constants'
+import { SITE_NAME, REGION_DATA } from '@/lib/constants'
 
 const SIDO_NAV = [
   { label: '서울', full: '서울특별시' },
@@ -33,6 +33,7 @@ export default function Header() {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setIsOpen(false)
+        setSelectedSido('')
       }
     }
     if (isOpen) document.addEventListener('mousedown', handleClickOutside)
@@ -71,7 +72,7 @@ export default function Header() {
 
         {/* 모바일 햄버거 버튼 */}
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => { setIsOpen(!isOpen); setSelectedSido('') }}
           aria-label="메뉴 열기"
           className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 sm:hidden"
         >
@@ -81,46 +82,44 @@ export default function Header() {
 
       {/* 모바일 드로어 */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-14 z-40 overflow-y-auto bg-white px-4 py-6 shadow-lg sm:hidden">
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">지역별</p>
-          <div className="grid grid-cols-3 gap-2">
-            {SIDO_NAV.map((item) => (
+        <div className="absolute left-0 right-0 top-14 z-40 max-h-[70vh] overflow-y-auto bg-white px-4 py-6 shadow-lg sm:hidden">
+          {!selectedSido ? (
+            <>
+              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">지역별</p>
+              <div className="grid grid-cols-3 gap-2">
+                {SIDO_NAV.map((item) => (
+                  <button
+                    key={item.full}
+                    onClick={() => setSelectedSido(item.full)}
+                    className="flex items-center justify-center rounded-xl border border-gray-100 px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
               <button
-                key={item.full}
-                onClick={() => setSelectedSido(selectedSido === item.full ? '' : item.full)}
-                className={`flex items-center justify-center rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
-                  selectedSido === item.full
-                    ? 'border-[#1f1bc4] bg-blue-50 text-[#1f1bc4]'
-                    : 'border-gray-100 text-gray-700 hover:border-[#1f1bc4] hover:text-[#1f1bc4]'
-                }`}
+                onClick={() => setSelectedSido('')}
+                className="mb-4 flex items-center gap-1 text-sm font-medium text-[#1f1bc4]"
               >
-                {item.label}
+                ← {SIDO_NAV.find((s) => s.full === selectedSido)?.label ?? selectedSido}
               </button>
-            ))}
-          </div>
-
-          <p className="mb-3 mt-6 text-xs font-bold uppercase tracking-wider text-gray-400">
-            카테고리별{selectedSido ? ` — ${SIDO_NAV.find((s) => s.full === selectedSido)?.label ?? ''}` : ''}
-          </p>
-          {!selectedSido && (
-            <p className="text-xs text-gray-400 mb-2">지역을 먼저 선택하면 해당 지역 카테고리로 이동합니다</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(REGION_DATA[selectedSido] ?? []).map((city) => (
+                  <Link
+                    key={city}
+                    href={`/${encodeURIComponent(selectedSido)}/${encodeURIComponent(city)}`}
+                    onClick={() => { setIsOpen(false); setSelectedSido('') }}
+                    className="flex items-center justify-center rounded-xl border border-gray-100 px-2 py-3 text-center text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
+                  >
+                    {city}
+                  </Link>
+                ))}
+              </div>
+            </>
           )}
-          <div className="grid grid-cols-3 gap-2">
-            {WELFARE_THEMES.filter((t) => t !== '전체').map((theme) => (
-              <Link
-                key={theme}
-                href={
-                  selectedSido
-                    ? `/region/${encodeURIComponent(selectedSido)}`
-                    : '/'
-                }
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center rounded-xl border border-gray-100 px-2 py-2 text-center text-sm font-medium text-gray-700 transition-colors hover:border-[#1f1bc4] hover:text-[#1f1bc4]"
-              >
-                {theme}
-              </Link>
-            ))}
-          </div>
         </div>
       )}
     </header>
