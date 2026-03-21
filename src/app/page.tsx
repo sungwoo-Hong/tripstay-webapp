@@ -18,9 +18,6 @@ export default function HomePage() {
       </section>
 
       <div className="mx-auto max-w-5xl px-4 py-10">
-        {/* ── 혜택 분류 탐색 ── */}
-        <PolicyTabs />
-
         {/* ── 출산 관련 지원금 ── */}
         <section className="mb-10">
           <h2 className="mb-1 text-lg font-bold text-gray-900">출산 관련 지원 내용입니다</h2>
@@ -40,6 +37,9 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* ── 혜택 분류 탐색 ── */}
+        <PolicyTabs />
 
         <AdBanner className="hidden sm:block mt-6" />
       </div>
