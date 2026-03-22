@@ -27,8 +27,13 @@ export default function HomePage() {
               <Link
                 key={policy.id}
                 href={`/policy/${policy.id}`}
-                className="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md sm:p-5"
+                className="relative group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#1f1bc4] hover:shadow-md sm:p-5"
               >
+                {policy.id === 'birth-support' && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                    인기
+                  </span>
+                )}
                 <span className="text-2xl sm:text-3xl">{policy.icon}</span>
                 <p className="mt-1 text-[10px] font-bold text-gray-900 group-hover:text-[#1f1bc4] sm:mt-3 sm:text-sm">
                   {policy.name}
