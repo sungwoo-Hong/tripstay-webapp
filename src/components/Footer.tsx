@@ -1,9 +1,5 @@
 import Link from 'next/link'
-import { SITE_NAME, POLICIES, SIDO_LIST } from '@/lib/constants'
-
-function shortSido(sido: string): string {
-  return sido.replace(/(특별자치시|특별자치도|광역시|특별시|도|시)$/, '')
-}
+import { SITE_NAME } from '@/lib/constants'
 
 export default function Footer() {
   return (
@@ -15,40 +11,16 @@ export default function Footer() {
           <p className="mt-1 text-sm text-gray-400">전국 복지서비스 정보 플랫폼</p>
         </div>
 
-        {/* 3열 링크 그리드 */}
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-          {/* 출산·육아 정책 */}
+        {/* 2열 링크 그리드 */}
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          {/* 이용방법 */}
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">출산·육아 정책</p>
-            <ul className="space-y-2">
-              {POLICIES.map((policy) => (
-                <li key={policy.id}>
-                  <Link
-                    href={`/policy/${policy.id}`}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    {policy.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 지역별 정보 */}
-          <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">지역별 정보</p>
-            <ul className="space-y-2">
-              {SIDO_LIST.map((sido) => (
-                <li key={sido}>
-                  <Link
-                    href={`/region/${encodeURIComponent(sido)}`}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    {shortSido(sido)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">이용방법</p>
+            <ol className="space-y-2 list-none">
+              <li className="text-sm text-gray-400">1. 시/도와 시/군/구를 선택하세요</li>
+              <li className="text-sm text-gray-400">2. 원하는 복지혜택을 확인하세요</li>
+              <li className="text-sm text-gray-400">3. 공식 사이트에서 신청하세요</li>
+            </ol>
           </div>
 
           {/* 이용 안내 */}
